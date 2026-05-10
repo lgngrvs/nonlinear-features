@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-3)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--loss-fn", type=str, default="l1", choices=["l1", "mse"])
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--save-dir", type=str, default="checkpoints")
     parser.add_argument("--seed", type=int, default=42)
@@ -89,6 +90,7 @@ def main():
             train_data, d=args.d, c=args.c, k=k,
             lr=args.lr, batch_size=args.batch_size,
             epochs=args.epochs, device=device,
+            loss_fn=args.loss_fn,
         )
 
         # Save checkpoint

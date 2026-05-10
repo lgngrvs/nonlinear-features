@@ -17,8 +17,12 @@ def train_sae(
     epochs: int = 10,
     device: str = "cpu",
     log_every: int = 100,
+    loss_fn: str = "l1",
 ) -> tuple[TopKSAE, dict]:
     """Train a TopK SAE on the given data.
+
+    Args:
+        loss_fn: "l1" for L1 reconstruction loss (as in paper), "mse" for MSE.
 
     Returns the trained SAE and a dict of training metrics.
     """
@@ -41,8 +45,10 @@ def train_sae(
 
             x_hat, z = model(batch)
 
-            # Reconstruction loss (MSE)
-            recon_loss = (batch - x_hat).pow(2).sum(dim=-1).mean()
+            if loss_fn == "l1":
+                recon_loss = (batch - x_hat).abs().sum(dim=-1).mean()
+            else:
+                recon_loss = (batch - x_hat).pow(2).sum(dim=-1).mean()
 
             loss = recon_loss
             loss.backward()
