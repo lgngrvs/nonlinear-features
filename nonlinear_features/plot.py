@@ -5,13 +5,62 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_r2_vs_sparsity(results_path: str, save_path: str | None = None):
-    """Plot mean R² at k_i vs sparsity budget k (main result figure)."""
+def _load_results(results_path: str) -> tuple[list[int], list[float], list[float], list[float]]:
+    """Load results and return (k_values, r2s, supports, rf_spreads)."""
     with open(results_path) as f:
         results = json.load(f)
 
     k_values = sorted(int(k) for k in results.keys())
-    r2_means = [results[str(k)]["eval_agg"]["mean_r2_at_ki"] for k in k_values]
+    r2_means, supports, spreads = [], [], []
+    for k in k_values:
+        r = results[str(k)]
+        if "eval_agg" in r:
+            r2_means.append(r["eval_agg"]["mean_r2_at_ki"])
+            supports.append(r["eval_agg"]["avg_support_size"])
+            spreads.append(r["eval_agg"]["avg_receptive_field_spread"])
+        else:
+            r2_means.append(r["mean_r2_at_ki"])
+            supports.append(r["avg_support_size"])
+            spreads.append(r["avg_rf_spread"])
+    return k_values, r2_means, supports, spreads
+
+
+def plot_synthetic_main(results_path: str, save_path: str | None = None):
+    """3-panel figure: R², support size, RF spread vs k."""
+    k_values, r2_means, supports, spreads = _load_results(results_path)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(14, 4.5))
+
+    ax1.plot(k_values, r2_means, "o-", linewidth=2, markersize=7, color="tab:blue")
+    ax1.set_xlabel("Sparsity budget k")
+    ax1.set_ylabel("Mean restricted R² at k_i")
+    ax1.set_title("Subspace Capture")
+    ax1.set_ylim(-0.05, 1.05)
+    ax1.grid(True, alpha=0.3)
+
+    ax2.plot(k_values, supports, "s-", linewidth=2, markersize=7, color="tab:green")
+    ax2.set_xlabel("Sparsity budget k")
+    ax2.set_ylabel("Avg support size")
+    ax2.set_title("Support Size")
+    ax2.grid(True, alpha=0.3)
+
+    ax3.plot(k_values, spreads, "^-", linewidth=2, markersize=7, color="tab:orange")
+    ax3.set_xlabel("Sparsity budget k")
+    ax3.set_ylabel("Avg RF spread (normalized)")
+    ax3.set_title("Receptive Field Spread")
+    ax3.grid(True, alpha=0.3)
+    ax3.set_ylim(0, 1.1)
+
+    plt.tight_layout()
+    if save_path:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        print(f"Saved to {save_path}")
+    plt.close()
+
+
+def plot_r2_vs_sparsity(results_path: str, save_path: str | None = None):
+    """Plot mean R² at k_i vs sparsity budget k (main result figure)."""
+    k_values, r2_means, _, _ = _load_results(results_path)
 
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.plot(k_values, r2_means, "o-", linewidth=2, markersize=8)
@@ -20,14 +69,12 @@ def plot_r2_vs_sparsity(results_path: str, save_path: str | None = None):
     ax.set_title("Subspace Capture vs Sparsity", fontsize=14)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(-0.05, 1.05)
-    ax.axhline(y=0.85, color="gray", linestyle="--", alpha=0.5, label="VE threshold")
-    ax.legend()
 
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
         print(f"Saved to {save_path}")
-    plt.show()
+    plt.close()
 
 
 def plot_support_and_spread(results_path: str, save_path: str | None = None):
@@ -94,12 +141,12 @@ def plot_r2_by_manifold_type(results_path: str, save_path: str | None = None):
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
     import sys
-    path = sys.argv[1] if len(sys.argv) > 1 else "checkpoints/results.json"
-    plot_r2_vs_sparsity(path, "r2_vs_sparsity.png")
-    plot_support_and_spread(path, "support_spread.png")
-    plot_r2_by_manifold_type(path, "r2_by_type.png")
+    path = sys.argv[1] if len(sys.argv) > 1 else "checkpoints_final/results.json"
+    plot_synthetic_main(path, "figures/synthetic_main.png")
+    plot_r2_by_manifold_type(path, "figures/r2_by_type.png")
+    plot_support_and_spread(path, "figures/support_spread.png")

@@ -36,6 +36,14 @@ class TopKSAE(nn.Module):
         sparse_code.scatter_(1, topk_idx, topk_vals)
         return sparse_code
 
+    def encode_with_pre_acts(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Encode returning both sparse code and raw pre-activations."""
+        pre_acts = self.W_enc(x)
+        topk_vals, topk_idx = torch.topk(pre_acts, self.k, dim=-1)
+        sparse_code = torch.zeros_like(pre_acts)
+        sparse_code.scatter_(1, topk_idx, topk_vals)
+        return sparse_code, pre_acts
+
     def decode(self, z: torch.Tensor) -> torch.Tensor:
         return self.W_dec(z)
 

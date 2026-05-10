@@ -114,21 +114,14 @@ def compute_restricted_r2(
         r2_scores = {}
         for n in range(min_atoms, max_atoms + 1):
             atoms_n = selected[:n]
+            codes_restricted = codes_i[:, atoms_n].cpu()  # (n_i, n)
 
-            # Restricted decode: project codes through selected decoder directions
-            # Use affine reconstruction: recon = codes_restricted @ D_selected^T + bias
-            # where bias absorbs the mean offset from non-negative codes
-            D_selected = decoder_weights[:, atoms_n]  # (d, n)
-            codes_restricted = codes_i[:, atoms_n]  # (n_i, n)
-
-            # Least-squares affine fit: minimize ||true_i - codes @ D^T - b||²
-            # Equivalent to centering and fitting
-            codes_centered = codes_restricted - codes_restricted.mean(dim=0, keepdim=True)
-            true_centered = true_i - mean_i
-
-            # Reconstruct via decoder directions with centered codes
-            recon_centered = codes_centered @ D_selected.T  # (n_i, d)
-            residual_var = (true_centered - recon_centered).pow(2).sum().item()
+            # Affine least-squares: true_i ≈ codes @ A + b
+            X = torch.cat([codes_restricted, torch.ones(len(codes_restricted), 1)], dim=-1)
+            target = true_i.cpu()
+            W = torch.linalg.lstsq(X, target).solution  # (n+1, d)
+            recon = X @ W
+            residual_var = (target - recon).pow(2).sum().item()
             r2 = 1 - residual_var / max(total_var, 1e-10)
             r2_scores[n] = r2
 
