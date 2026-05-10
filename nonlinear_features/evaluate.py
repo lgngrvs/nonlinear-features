@@ -68,7 +68,16 @@ def compute_restricted_r2(
     n_atoms_range: tuple[int, int] = (-2, 3),  # relative to k_i
     device: str = "cpu",
 ) -> list[ManifoldEvalResult]:
-    """Compute restricted R² for all manifold instances."""
+    """Compute restricted R² for all manifold instances.
+
+    Following the paper (eq 14): for each manifold, greedily select decoder
+    directions by residual variance, then measure how well the restricted
+    codes (projected through those decoder directions) reconstruct the
+    manifold's true contributions.
+
+    We use an affine fit (codes @ decoder_cols + bias) to account for the
+    fact that SAE codes are non-negative and may have offsets.
+    """
     model = model.to(device).eval()
     eval_data = eval_data.to(device)
     active_masks = active_masks.to(device)
@@ -95,7 +104,7 @@ def compute_restricted_r2(
         max_atoms = k_i + n_atoms_range[1]
         min_atoms = max(1, k_i + n_atoms_range[0])
 
-        # Greedy atom selection
+        # Greedy atom selection (based on decoder directions explaining true variance)
         selected = greedy_atom_selection(decoder_weights, true_i, max_atoms)
 
         # Compute R² for each number of atoms
@@ -105,16 +114,21 @@ def compute_restricted_r2(
         r2_scores = {}
         for n in range(min_atoms, max_atoms + 1):
             atoms_n = selected[:n]
-            # Mask codes to only selected atoms
-            atom_mask = torch.zeros(model.c, device=device)
-            atom_mask[atoms_n] = 1.0
-            codes_masked = codes_i * atom_mask.unsqueeze(0)
 
-            # Decode with restricted code
-            with torch.no_grad():
-                recon = model.decode(codes_masked)
+            # Restricted decode: project codes through selected decoder directions
+            # Use affine reconstruction: recon = codes_restricted @ D_selected^T + bias
+            # where bias absorbs the mean offset from non-negative codes
+            D_selected = decoder_weights[:, atoms_n]  # (d, n)
+            codes_restricted = codes_i[:, atoms_n]  # (n_i, n)
 
-            residual_var = (true_i - recon).pow(2).sum().item()
+            # Least-squares affine fit: minimize ||true_i - codes @ D^T - b||²
+            # Equivalent to centering and fitting
+            codes_centered = codes_restricted - codes_restricted.mean(dim=0, keepdim=True)
+            true_centered = true_i - mean_i
+
+            # Reconstruct via decoder directions with centered codes
+            recon_centered = codes_centered @ D_selected.T  # (n_i, d)
+            residual_var = (true_centered - recon_centered).pow(2).sum().item()
             r2 = 1 - residual_var / max(total_var, 1e-10)
             r2_scores[n] = r2
 
