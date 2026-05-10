@@ -214,7 +214,7 @@ def run_pca_and_plot(
 
 def main():
     parser = argparse.ArgumentParser(description="Gemma 3 12B activation PCA")
-    parser.add_argument("--model", type=str, default="google/gemma-3-12b-pt",
+    parser.add_argument("--model", type=str, default="google/gemma-3-12b-it",
                         help="HuggingFace model ID")
     parser.add_argument("--layer", type=int, default=24,
                         help="Layer to extract activations from (Gemma 3 12B has 48 layers)")
