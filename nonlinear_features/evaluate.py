@@ -200,36 +200,59 @@ def compute_receptive_field_spread(
 
 def compute_ising_coupling(
     codes: torch.Tensor,  # (n, c)
-    regularization: float = 0.01,
+    lam: float = 0.001,
+    n_steps: int = 1000,
+    n_samples: int = 10_000,
+    device: str = "mps",
 ) -> torch.Tensor:
-    """Fit pairwise Ising model via pseudo-likelihood maximization.
+    """Fit pairwise Ising model via joint pseudo-likelihood maximization.
 
-    Returns coupling matrix J (c, c).
+    Following the paper: binarize to ±1 spins, optimize PLL with Adam +
+    proximal L1, enforce symmetry J = (J + J^T)/2 at each step.
 
-    Simplified version using correlation-based approximation for speed.
-    For the full PLM approach, use scipy or dedicated Ising fitting libraries.
+    Returns the full (c, c) coupling matrix (zeros for inactive atoms).
     """
-    # Binarize codes
-    s = (codes.abs() > 0).float()  # (n, c)
+    s = torch.sign(codes[:n_samples])
+    s[codes[:n_samples] == 0] = -1.0
 
-    # Center
-    s_centered = s - s.mean(dim=0, keepdim=True)
+    # Filter to active atoms
+    firing_rate = (s > 0).float().mean(dim=0)
+    active = (firing_rate > 0.01) & (firing_rate < 0.99)
+    active_idx = active.nonzero(as_tuple=True)[0]
+    s_active = s[:, active_idx].to(device)
+    p = len(active_idx)
 
-    # Empirical covariance
-    n = s.shape[0]
-    cov = (s_centered.T @ s_centered) / n  # (c, c)
+    J_param = torch.zeros(p, p, device=device, requires_grad=True)
+    h_param = torch.zeros(p, device=device, requires_grad=True)
+    optimizer = torch.optim.Adam([J_param, h_param], lr=0.01)
 
-    # Precision matrix (inverse covariance) as proxy for conditional independence
-    # Add regularization for stability
-    eye = torch.eye(cov.shape[0], device=cov.device)
-    precision = torch.linalg.inv(cov + regularization * eye)
+    def soft_threshold(x, t):
+        return torch.sign(x) * torch.clamp(x.abs() - t, min=0)
 
-    # Coupling matrix: symmetrize and zero diagonal
-    J = -(precision - torch.diag(precision.diag()))
-    J = (J + J.T) / 2
-    J.fill_diagonal_(0)
+    for step in range(n_steps):
+        optimizer.zero_grad()
+        J_sym = (J_param + J_param.T) / 2
+        J_sym = J_sym - torch.diag(J_sym.diag())
+        field = s_active @ J_sym + h_param.unsqueeze(0)
+        pll = F.logsigmoid(2 * s_active * field).mean()
+        (-pll).backward()
+        optimizer.step()
+        with torch.no_grad():
+            J_param.data = soft_threshold(J_param.data, lam)
+            J_param.data = (J_param.data + J_param.data.T) / 2
+            J_param.data.fill_diagonal_(0)
 
-    return J
+    # Map back to full (c, c) matrix
+    c = codes.shape[1]
+    J_full = torch.zeros(c, c)
+    idx = active_idx.cpu()
+    J_out = J_param.detach().cpu()
+    for i in range(p):
+        for j in range(p):
+            if J_out[i, j].abs() > 1e-6:
+                J_full[idx[i], idx[j]] = J_out[i, j]
+
+    return J_full
 
 
 def aggregate_results(
