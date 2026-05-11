@@ -13,3 +13,4 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
+real-models = ["transformers>=4.45", "accelerate", "scikit-learn", "safetensors", "huggingface_hub"]
