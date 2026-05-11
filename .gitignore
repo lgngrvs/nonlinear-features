@@ -11,6 +11,5 @@ checkpoints/
 runs/
 wandb/
 data/
-paper.pdf
 .venv/
 *.egg
