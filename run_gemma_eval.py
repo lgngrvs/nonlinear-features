@@ -27,19 +27,25 @@ from nonlinear_features.evaluate_real import (
 )
 
 
-def load_activations(activations_dir: str) -> dict[str, torch.Tensor]:
-    """Load saved activation tensors from run_gemma_pca.py."""
+def load_activations(activations_dir: str):
+    """Load saved activation tensors and labels from run_gemma_pca.py."""
     manifold_acts = {}
+    manifold_labels = {}
     act_dir = Path(activations_dir)
     for path in sorted(act_dir.glob("activations_*.pt")):
         name = path.stem.replace("activations_", "")
         data = torch.load(path, map_location="cpu", weights_only=False)
         if isinstance(data, dict):
             manifold_acts[name] = data["activations"]
+            if "labels" in data:
+                labels = data["labels"]
+                if isinstance(labels, torch.Tensor):
+                    labels = labels.numpy()
+                manifold_labels[name] = labels
         else:
             manifold_acts[name] = data
         print(f"  Loaded {name}: {manifold_acts[name].shape}")
-    return manifold_acts
+    return manifold_acts, manifold_labels
 
 
 def plot_restricted_r2(results, save_dir: str):
@@ -67,16 +73,35 @@ def plot_restricted_r2(results, save_dir: str):
     print(f"Saved {path}")
 
 
-def plot_ising_matrix(J: torch.Tensor, save_dir: str):
-    """Plot the Ising coupling matrix."""
-    fig, ax = plt.subplots(figsize=(8, 7))
+def plot_ising_matrix(J: torch.Tensor, active_indices: list[int], save_dir: str):
+    """Plot the active submatrix of the Ising coupling matrix."""
+    if not active_indices:
+        print("  No active atoms for Ising plot.")
+        return
+    idx = sorted(active_indices)
+    J_sub = J[np.ix_(idx, idx)].cpu().numpy()
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Full matrix (sparse overview)
+    ax = axes[0]
     J_np = J.cpu().numpy()
-    vmax = np.percentile(np.abs(J_np), 99)
+    vmax = np.percentile(np.abs(J_np[J_np != 0]), 99) if (J_np != 0).any() else 1.0
     im = ax.imshow(J_np, cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="auto")
-    ax.set_title("Ising coupling matrix J (SAE latent pairs)")
+    ax.set_title(f"Full J ({J.shape[0]}×{J.shape[0]})\n(mostly zero outside active atoms)")
     ax.set_xlabel("Latent index")
     ax.set_ylabel("Latent index")
     plt.colorbar(im, ax=ax, shrink=0.8)
+
+    # Active submatrix
+    ax = axes[1]
+    vmax_sub = np.percentile(np.abs(J_sub), 99) if J_sub.size > 0 else 1.0
+    im2 = ax.imshow(J_sub, cmap="RdBu_r", vmin=-vmax_sub, vmax=vmax_sub, aspect="auto")
+    ax.set_title(f"Active submatrix ({len(idx)}×{len(idx)} atoms)\n|J|_max={np.abs(J_sub).max():.4f}")
+    ax.set_xlabel("Active atom rank")
+    ax.set_ylabel("Active atom rank")
+    plt.colorbar(im2, ax=ax, shrink=0.8)
+
     plt.tight_layout()
     path = Path(save_dir) / "ising_coupling_gemma.png"
     plt.savefig(path, dpi=150, bbox_inches="tight")
@@ -117,7 +142,7 @@ def main():
 
     # 1. Load activations
     print("\n=== Loading activations ===")
-    manifold_acts = load_activations(args.activations_dir)
+    manifold_acts, manifold_labels = load_activations(args.activations_dir)
     if not manifold_acts:
         print("ERROR: No activation files found. Run run_gemma_pca.py --save-activations first.")
         return
@@ -152,7 +177,8 @@ def main():
     # 3. Compute restricted R²
     print("\n=== Computing restricted R² ===")
     results = compute_restricted_r2_real(
-        sae, manifold_acts, max_atoms=args.max_atoms, device=device,
+        sae, manifold_acts, manifold_labels=manifold_labels,
+        max_atoms=args.max_atoms, device=device,
     )
 
     print("\nResults:")
@@ -166,9 +192,9 @@ def main():
 
     # 4. Ising coupling
     print("\n=== Computing Ising coupling ===")
-    J = compute_ising_coupling_real(sae, manifold_acts, device=device)
-    print(f"  J shape: {J.shape}, |J|_max={J.abs().max():.4f}")
-    plot_ising_matrix(J, args.save_dir)
+    J, active_indices = compute_ising_coupling_real(sae, manifold_acts, device=device)
+    print(f"  J shape: {J.shape}, active atoms: {len(active_indices)}, |J|_max={J.abs().max():.4f}")
+    plot_ising_matrix(J, active_indices, args.save_dir)
 
     # 5. Save results
     summary = {

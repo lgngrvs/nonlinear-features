@@ -68,13 +68,23 @@ class JumpReLUSAE(nn.Module):
         else:
             weights_path = path
 
-        state_dict = load_file(str(weights_path))
+        raw = load_file(str(weights_path))
+        # GemmaScope checkpoints use lowercase keys (w_enc, w_dec, ...)
+        state_dict = {k.upper() if k in ("w_enc", "w_dec", "b_enc", "b_dec") else k: v
+                      for k, v in raw.items()}
 
-        d_in = state_dict["W_enc"].shape[0]
-        d_sae = state_dict["W_enc"].shape[1]
+        d_in = state_dict["W_ENC"].shape[0]
+        d_sae = state_dict["W_ENC"].shape[1]
 
         model = cls(d_in, d_sae)
-        model.load_state_dict(state_dict)
+        # Map to nn.Parameter names (W_enc, W_dec, b_enc, b_dec, threshold)
+        model.load_state_dict({
+            "W_enc": state_dict["W_ENC"],
+            "W_dec": state_dict["W_DEC"],
+            "b_enc": state_dict["B_ENC"],
+            "b_dec": state_dict["B_DEC"],
+            "threshold": state_dict["threshold"],
+        })
         model = model.to(device=device, dtype=dtype)
         model.eval()
         return model

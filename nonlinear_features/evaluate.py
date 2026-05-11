@@ -196,7 +196,7 @@ def compute_ising_coupling(
     lam: float = 0.001,
     n_steps: int = 1000,
     n_samples: int = 10_000,
-    device: str = "mps",
+    device: str = "cpu",
 ) -> torch.Tensor:
     """Fit pairwise Ising model via joint pseudo-likelihood maximization.
 
