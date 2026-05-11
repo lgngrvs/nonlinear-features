@@ -29,11 +29,11 @@ from tqdm import tqdm
 # ---------------------------------------------------------------------------
 
 def build_color_prompts():
-    """~900 hex color prompts; geometry = paraboloid (hue, sat, val)."""
+    """~5800 hex color prompts; geometry = paraboloid (hue, sat, val)."""
     prompts, labels = [], []
-    for h in range(0, 360, 10):
-        for s_pct in range(20, 100, 20):
-            for v_pct in range(20, 100, 20):
+    for h in range(0, 360, 5):
+        for s_pct in range(10, 100, 10):
+            for v_pct in range(10, 100, 10):
                 s, v = s_pct / 100, v_pct / 100
                 r, g, b = colorsys.hsv_to_rgb(h / 360, s, v)
                 hex_code = f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
@@ -43,31 +43,30 @@ def build_color_prompts():
 
 
 def build_temperature_prompts():
-    """150 temperature prompts; geometry = line."""
+    """~1500 temperature prompts; geometry = line."""
     prompts, labels = [], []
-    for f in range(-20, 131):
-        prompts.append(f"Today it's {f} degrees Fahrenheit outside")
-        labels.append(f)
+    for f in np.arange(-20, 130.1, 0.1):
+        prompts.append(f"Today it's {f:.1f} degrees Fahrenheit outside")
+        labels.append(float(f))
     return prompts, np.array(labels, dtype=float), "temperature"
 
 
 def build_age_prompts():
-    """99 age prompts; geometry = line."""
+    """~980 age prompts; geometry = line."""
     prompts, labels = [], []
-    for age in range(1, 100):
-        prompts.append(f"They are {age} years old.")
-        labels.append(age)
+    for age in np.arange(1, 99.1, 0.1):
+        prompts.append(f"They are {age:.1f} years old.")
+        labels.append(float(age))
     return prompts, np.array(labels, dtype=float), "age"
 
 
 def build_days_prompts():
-    """420 day-of-week prompts; geometry = circle."""
+    """~10080 day-of-week prompts (every minute); geometry = circle."""
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    hours = list(range(0, 24))
     prompts, labels = [], []
     for di, day in enumerate(days):
-        for hour in hours:
-            for minute in [0, 15, 30, 45]:
+        for hour in range(0, 24):
+            for minute in range(0, 60):
                 time_str = f"{hour:02d}:{minute:02d}"
                 prompts.append(f"It's {time_str} on {day}")
                 angle = (di * 24 * 60 + hour * 60 + minute) / (7 * 24 * 60) * 2 * np.pi
@@ -76,11 +75,14 @@ def build_days_prompts():
 
 
 def build_years_prompts():
-    """199 year prompts; geometry = helix."""
+    """~2400 year+month prompts; geometry = helix."""
+    months = ["January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"]
     prompts, labels = [], []
     for year in range(1825, 2025):
-        prompts.append(f"The date is year {year}")
-        labels.append(year)
+        for mi, month in enumerate(months):
+            prompts.append(f"The date is {month} {year}")
+            labels.append(year + mi / 12)
     return prompts, np.array(labels, dtype=float), "years"
 
 
@@ -101,17 +103,16 @@ def load_model_and_tokenizer(model_name: str, device: str):
     """Load Gemma model with appropriate dtype for device."""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    dtype = torch.float32 if device == "cpu" else torch.float16
+    dtype = torch.float32 if device == "cpu" else torch.bfloat16
     if device == "mps":
-        dtype = torch.float32  # MPS float16 support is spotty
+        dtype = torch.float32  # MPS bfloat16 support is spotty
 
     print(f"Loading {model_name} (dtype={dtype}, device={device})...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map=device if device != "mps" else None,
-        output_hidden_states=True,
     )
     if device == "mps":
         model = model.to(device)
@@ -138,7 +139,7 @@ def harvest_activations(
         inputs = {k: v.to(device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            outputs = model(**inputs)
+            outputs = model(**inputs, output_hidden_states=True)
 
         hidden_states = outputs.hidden_states[layer]  # (batch, seq_len, d)
         # Get last non-padding token activation for each sequence
@@ -242,8 +243,9 @@ def main():
     os.makedirs(args.save_dir, exist_ok=True)
 
     model, tokenizer = load_model_and_tokenizer(args.model, device)
-    d_model = model.config.hidden_size
-    n_layers = model.config.num_hidden_layers
+    cfg = getattr(model.config, "text_config", model.config)
+    d_model = cfg.hidden_size
+    n_layers = cfg.num_hidden_layers
     print(f"Model loaded: d={d_model}, layers={n_layers}")
     print(f"Extracting from layer {args.layer}/{n_layers}")
 

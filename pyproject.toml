@@ -9,6 +9,12 @@ dependencies = [
     "matplotlib",
     "tqdm",
     "einops",
+    "scikit-learn",
+    "plotly",
+    "transformers>=4.45",
+    "accelerate",
+    "safetensors",
+    "huggingface_hub",
 ]
 
 [project.optional-dependencies]
