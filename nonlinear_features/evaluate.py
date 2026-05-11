@@ -197,16 +197,19 @@ def compute_ising_coupling(
     n_steps: int = 1000,
     n_samples: int = 10_000,
     device: str = "cpu",
-) -> torch.Tensor:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Fit pairwise Ising model via joint pseudo-likelihood maximization.
 
     Following the paper: binarize to ±1 spins, optimize PLL with Adam +
     proximal L1, enforce symmetry J = (J + J^T)/2 at each step.
 
-    Returns the full (c, c) coupling matrix (zeros for inactive atoms).
+    Returns (J_active, active_idx):
+        J_active: (p, p) coupling matrix for the p active atoms
+        active_idx: (p,) indices into the full code dimension
     """
-    s = torch.sign(codes[:n_samples])
-    s[codes[:n_samples] == 0] = -1.0
+    n_use = min(n_samples, len(codes))
+    s = torch.sign(codes[:n_use])
+    s[codes[:n_use] == 0] = -1.0
 
     # Filter to active atoms
     firing_rate = (s > 0).float().mean(dim=0)
@@ -235,17 +238,7 @@ def compute_ising_coupling(
             J_param.data = (J_param.data + J_param.data.T) / 2
             J_param.data.fill_diagonal_(0)
 
-    # Map back to full (c, c) matrix
-    c = codes.shape[1]
-    J_full = torch.zeros(c, c)
-    idx = active_idx.cpu()
-    J_out = J_param.detach().cpu()
-    for i in range(p):
-        for j in range(p):
-            if J_out[i, j].abs() > 1e-6:
-                J_full[idx[i], idx[j]] = J_out[i, j]
-
-    return J_full
+    return J_param.detach().cpu(), active_idx.cpu()
 
 
 def aggregate_results(

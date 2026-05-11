@@ -303,20 +303,26 @@ def compute_ising_coupling_real(
     manifold_activations: dict[str, torch.Tensor],
     device: str = "cpu",
     regularization: float = 0.01,
+    n_steps: int = 2000,
 ) -> tuple[torch.Tensor, list[int]]:
     """Compute Ising coupling matrix from SAE codes on real manifold activations.
 
+    Shuffles the concatenated activations so all manifolds contribute equally,
+    then uses all samples (not just the first 10k).
     Returns (J_full, active_indices) so callers can visualize the active submatrix.
     """
     sae = sae.to(device).eval()
-    all_acts = torch.cat(list(manifold_activations.values()), dim=0).to(device)
+    all_acts = torch.cat(list(manifold_activations.values()), dim=0)
+    perm = torch.randperm(len(all_acts))
+    all_acts = all_acts[perm].to(device)
+
     with torch.no_grad():
         codes = sae.encode(all_acts)
 
     from .evaluate import compute_ising_coupling
-    J_full = compute_ising_coupling(codes, lam=regularization, device=device)
-
-    # Return active indices so callers can extract the submatrix
-    firing_rate = (codes > 0).float().mean(dim=0)
-    active_idx = ((firing_rate > 0.01) & (firing_rate < 0.99)).nonzero(as_tuple=True)[0].cpu().tolist()
-    return J_full, active_idx
+    J_active, active_idx_tensor = compute_ising_coupling(
+        codes, lam=regularization, device=device,
+        n_steps=n_steps, n_samples=len(codes),
+    )
+    active_idx = active_idx_tensor.tolist()
+    return J_active, active_idx
