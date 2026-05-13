@@ -207,8 +207,10 @@ def compute_restricted_r2_real(
 
             if labels_t is not None:
                 # Affine OLS: acts_concept ≈ codes_sel @ A + b
+                # Use gelsd (SVD-based) driver for stability when selected atoms are
+                # collinear (common with wide SAEs like 65k whose features are specialized).
                 X = torch.cat([codes_sel, torch.ones(n, 1)], dim=-1)
-                W = torch.linalg.lstsq(X, acts_concept_cpu).solution
+                W = torch.linalg.lstsq(X, acts_concept_cpu, driver="gelsd").solution
                 recon_concept = X @ W
                 residual = (acts_concept_cpu - recon_concept).pow(2).sum().item()
             else:
