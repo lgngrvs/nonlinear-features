@@ -184,9 +184,63 @@ Concept assignments: colors (89 atoms), days (68), years (64), temperature (50).
 
 **Fix**: The paper's real-model experiments use instruction-tuned models (where concepts are more cleanly represented after RLHF). Switched to `google/gemma-3-12b-it`.
 
-### [TODO: Gemma-specific bugs from remote server sessions]
+### Bug 7 (Gemma): Missing base dependencies
 
-[TODO] — Additional bugs encountered during Gemma activation harvesting, SAE weight loading (lowercase key names in GemmaScope checkpoints vs. expected format), and evaluation pipeline debugging were resolved in remote sessions without local transcripts. Key issues likely included: device handling for large model inference, safetensors loading edge cases, and JumpReLU threshold behavior with untrained/random weights (L0=0).
+**Symptom**: `ModuleNotFoundError` on `sklearn`, `transformers`, `accelerate`, etc. when running `uv run run_gemma_pca.py`
+
+**Root cause**: `scikit-learn`, `transformers`, `accelerate`, `safetensors`, and `huggingface_hub` were all in an optional `[real-models]` dependency group in `pyproject.toml` rather than in the base `dependencies` list. `uv run` uses only base dependencies by default.
+
+**Fix**: Moved all five packages into the main `dependencies` list.
+
+### Bug 8 (Gemma): Interrupted model download
+
+**Symptom**: Script hung indefinitely at model load — no error, no progress.
+
+**Root cause**: A prior download of `google/gemma-3-12b-it` had been interrupted, leaving 4 `.incomplete` blob shards (~25GB total) in the HF cache. The HuggingFace downloader tried to resume them silently, appearing as a hang. Compounding this: `HF_HOME` was set to `/nlp/scr/logan/.hf-cache` while the partial download was at `/juice2/scr2/logan/.hf-cache` — but both paths are symlinks to the same location.
+
+**Fix**: Ran `huggingface-cli download google/gemma-3-12b-it` to completion. Verified 6 clean shards with no `.incomplete` files before re-running.
+
+### Bug 9 (Gemma): Three API mismatches in the loading code
+
+Three separate errors surfaced once the model actually loaded:
+
+1. **`torch_dtype` deprecated**: `AutoModelForCausalLM.from_pretrained(..., torch_dtype=...)` raises a deprecation error in newer `transformers`; renamed to `dtype`.
+
+2. **`output_hidden_states` treated as a generation flag**: Passing it in `from_pretrained` caused the model to emit hidden states on every generation call rather than only when requested. Fixed by moving it to the forward call: `model(**inputs, output_hidden_states=True)`.
+
+3. **`Gemma3Config` wraps a nested `text_config`**: `model.config.hidden_size` raises `AttributeError` — `Gemma3Config` stores the actual transformer config in a sub-object. Fixed with `cfg = getattr(model.config, "text_config", model.config)` before reading `hidden_size` and `num_hidden_layers`.
+
+### Bug 10 (Gemma): float16 NaN overflow → switch to bfloat16
+
+**Symptom**: `ValueError: Input X contains NaN` from PCA after the first manifold successfully saved activations.
+
+**Root cause**: Loading a 12B-parameter model in `float16` causes overflow in the large intermediate activations — values exceed float16's max (~65504), producing `inf` which propagates to `NaN` in PCA.
+
+**Fix**: Switched dtype to `bfloat16`, which has the same dynamic range as float32 (8 exponent bits) while still halving memory vs. float32.
+
+### Bug 11 (Gemma): GemmaScope SAE checkpoint uses lowercase weight keys
+
+**Symptom**: `KeyError: 'W_enc'` when loading the GemmaScope JumpReLU SAE from HuggingFace.
+
+**Root cause**: The `JumpReLUSAE.from_pretrained` loader expected uppercase keys (`W_enc`, `W_dec`, `b_enc`, `b_dec`, `log_threshold`) matching the training code's `nn.Parameter` names, but the released GemmaScope checkpoints use lowercase (`w_enc`, `w_dec`, etc.).
+
+**Fix**: Added a remapping step in `from_pretrained` that lowercases keys from the safetensors file before loading into the state dict.
+
+### Bug 12 (Gemma): Wrong kwarg name for Ising regularization
+
+**Symptom**: `TypeError: compute_ising_coupling() got an unexpected keyword argument 'regularization'`
+
+**Root cause**: `evaluate_real.py` called `compute_ising_coupling(codes, regularization=lam)` but the underlying function in `evaluate.py` uses `lam` as the parameter name.
+
+**Fix**: Changed the call to `compute_ising_coupling(codes, lam=regularization)`.
+
+### Bug 13 (Gemma): Hardcoded `device="mps"` default in Ising coupling
+
+**Symptom**: `RuntimeError: Expected all tensors to be on the same device` — Ising tensors on `mps`, input codes on `cuda`.
+
+**Root cause**: `compute_ising_coupling` in `evaluate.py` had `device: str = "mps"` hardcoded as the default parameter, and `compute_ising_coupling_real` in `evaluate_real.py` didn't pass the device through from its caller.
+
+**Fix**: Changed the default to `device: str = "cpu"` and threaded the device argument through `compute_ising_coupling_real` → `compute_ising_coupling`.
 
 ---
 
