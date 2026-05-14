@@ -1,10 +1,11 @@
 # Do Sparse Autoencoders Capture Concept Manifolds? — A Replication and Extension
 
-## Hook / Motivation
+## TLDR (for the author)
 
-- The Linear Representation Hypothesis (LRH) assumes concepts = directions in activation space. But growing evidence shows many concepts (color, time, temperature) are organized along *curved, low-dimensional manifolds*.
-- This paper (Bhalla, Fel, Rager et al., arXiv:2604.28119) asks: if the geometry is nonlinear, can SAEs still recover it? Answer: yes, but only through *groups* of atoms that collectively tile the manifold — never through individual features.
-- We replicate their synthetic experiment from scratch and extend it to Gemma 3 12B with GemmaScope 2 SAEs to test whether the same manifold structure appears in a different model family.
+- **Synthetic replication**: Confirmed the three-regime structure (shattering → capture → dilution) with a TopK MSE SAE sweep ($k=3$–$25$). Peak restricted R²=0.82 at $k=14$. Ising at $k=4$ (capture sweet-spot) gives |J|_max=0.86 with clean block-diagonal structure after sorting atoms by ground-truth manifold; at $k=25$ (dilution) |J|_max≈0.025 — essentially noise.
+- **Gemma 3 12B replication**: Colors, days, temperature, and years all recover expected manifold geometries (paraboloid, circle, line, helix) at layer 24 using zero-padded RGB prompts. 16k GemmaScope JumpReLU SAE captures all four manifolds with non-monotone R² curves (consistent with your Fig. 4A/4C). Ising restricted to 104 concept atoms shows block structure.
+- **New finding — BPE tokenization artifact**: Hex `#rrggbb` tokenizes into 4–7 tokens depending on byte values, producing 4 discrete PCA clusters (one per token-count class). Zero-padded `rgb(rrr,ggg,bbb)` always produces exactly 17 tokens → smooth continuous manifold. Also: Gemma doesn't spontaneously encode years as a helix — month-injected prompts (`"The date is {month} {year}"`) are required.
+- **Extension — line-breaking mechanistic interp**: Found F14066 as a binary near-break detector (mean_40=337, mean_80=0 in GemmaScope resid L24), F632 as a clean monotone position-ramp feature (r²=0.82 with char_pos at attn L1). Layer probe shows R²>0.97 with char_pos from layer 1, primarily written by attention (R²=0.856 at L0).
 
 ---
 
@@ -16,270 +17,144 @@
   - **Globally**: a compact group of atoms whose linear span contains the entire manifold
   - **Locally (tiling)**: atoms that each selectively tile a restricted region of the geometry
 - Three regimes as sparsity budget $k$ increases:
-  1. **Tiling/Shattering** (low $k$): atoms are shared across manifolds, no clean block structure
+  1. **Shattering** (low $k$): atoms are shared across manifolds, small support, narrow RF
   2. **Capture** (intermediate $k$): atoms cleanly span individual manifold subspaces
-  3. **Dilution** (high $k$): atoms over-tile manifolds redundantly, fragmenting structure
+  3. **Dilution** (high $k$): atoms over-tile manifolds redundantly; large support, wide RF
 - The Ising model formalism: fit a pairwise Markov random field (±1 spins) to SAE atom co-firing patterns. Block-diagonal structure in the coupling matrix $J$ reveals manifold communities.
 
 ---
 
 ## Part 2: Synthetic Experiment — Setup
 
-- 48 manifold instances: 8 types (circles, spheres, tori, Mobius strips, Swiss rolls, helices, flat disks, line segments) × 6 variants each
+- 48 manifold instances: 8 types (circles, spheres, tori, Möbius strips, Swiss rolls, helices, flat disks, line segments) × 6 variants each
 - Ambient dimension $d=128$, dictionary size $c=512$ (4× expansion)
 - 2M training samples, 100k eval samples, $L_0=4$ manifolds active per sample
-- TopK SAE architecture with sparsity sweep: $k \in \{3, 4, 6, 8, 10, 14, 16, 20, 25\}$
-- Training: Adam (lr=3e-3), L1 reconstruction loss, cosine LR schedule, auxiliary dead-neuron loss
+- TopK SAE, MSE reconstruction loss, Adam (lr=3e-3), cosine LR, auxiliary dead-neuron loss
+- Sparsity sweep: $k \in \{3, 4, 6, 8, 10, 14, 16, 20, 25\}$
 
 ---
 
 ## Part 3: Synthetic Results — The Three Regimes
 
-### Main result figure
+### Figure 4A: R² vs. sparsity
 
-![Synthetic main results — R², support size, and RF spread vs. sparsity budget k](figures/synthetic_main.png)
+![Synthetic Fig 4A](figures/synthetic/fig4a.png)
 
-Peak restricted R² = 0.83 at $k=14$, with clear tiling→capture→dilution transition. Support size grows exponentially with $k$ while receptive field spread saturates near 1.0 in the dilution regime.
+Left: aggregate mean R²@k_i peaks at k=14 (R²=0.82). Right: per-type subplots showing R²(# atoms) for five K values — low-k curves saturate early and cleanly; high-k curves are noisier and require more atoms before plateau.
 
-### Per-manifold breakdown
+### Figure 4B: Support size vs. RF spread path
 
-![R² by manifold type](figures/r2_by_type.png)
+![Synthetic Fig 4B](figures/synthetic/fig4b.png)
 
-All 8 manifold types follow the same qualitative curve. Segments and Swiss rolls are captured most easily (1D, high curvature → clean tiling), while spheres and tori are hardest (higher intrinsic dimension).
+Single averaged path from shattering (small support ≈3, narrow RF ≈0.52 at k=3) through capture (k=4–6) to dilution (support ≈43, RF ≈0.96 at k=25). The path traces the expected L-shape.
 
-### Ising coupling matrices
+### Figure 4C: Ising coupling at k=4
 
-![Ising coupling across three regimes](figures/ising_proper.png)
+![Synthetic Ising k=4](figures/synthetic/ising_coupling_k4.png)
 
-- **k=4 (tiling)**: sparse, noisy coupling — atoms shared across manifolds, 13 Louvain communities
-- **k=8 (capture)**: clean block-diagonal structure emerges — atoms cluster by manifold, both positive (co-firing) and negative (mutually exclusive) couplings visible
-- **k=20 (dilution)**: blocks fragment — 22 communities, redundant tiling breaks clean structure
+155 active atoms sorted by ground-truth manifold assignment. Each manifold instance's 3–4 atoms form tight positive-coupling blocks; cross-manifold entries are near zero. |J|_max=0.86. (At k=25: |J|_max≈0.025 — dilution kills pairwise structure.)
 
-### Final results table
+### Results table
 
-| k | R² | VE | Dead neurons | Regime |
+| k | R²@k_i | Support | RF spread | Regime |
 |---|---|---|---|---|
-| 3 | 0.49 | 0.74 | 12 | Tiling |
-| 4 | 0.62 | 0.83 | 4 | Tiling |
-| 6 | 0.74 | 0.94 | 5 | Transition |
-| 8 | 0.80 | 0.98 | 1 | Capture |
-| 10 | 0.82 | 0.99 | 1 | Capture |
-| **14** | **0.83** | **0.99** | **3** | **Peak** |
-| 16 | 0.83 | 1.00 | 2 | Dilution onset |
-| 20 | 0.82 | 1.00 | 0 | Dilution |
-| 25 | 0.79 | 1.00 | 0 | Dilution |
+| 3 | 0.515 | 3.3 | 0.52 | Shattering |
+| 4 | 0.632 | 3.2 | 0.59 | Capture onset |
+| 6 | 0.700 | 3.7 | 0.66 | — |
+| 8 | 0.778 | 4.7 | 0.71 | — |
+| 10 | 0.819 | 5.8 | 0.79 | — |
+| **14** | **0.824** | **9.4** | **0.83** | **Peak** |
+| 16 | 0.822 | 11.6 | 0.85 | Dilution onset |
+| 20 | 0.819 | 21.4 | 0.94 | Dilution |
+| 25 | 0.814 | 42.9 | 0.96 | Dilution |
 
-Our peak R² (0.83) is somewhat below the paper's reported ~0.9. The residual gap is likely due to: (a) the paper may use $c=1024$ vs. our $c=512$, (b) possible differences in training duration/hyperparameters not fully specified, (c) VE still below the paper's 0.85 quality threshold at low $k$ values.
-
----
-
-## Part 4: Extension to Gemma 3 12B — Do Real Model Activations Show Manifold Structure?
-
-### Step 1: Activation Harvesting and PCA Verification
-
-We harvest last-token activations from Gemma 3 12B Instruct at layer 24 (~60% depth) for four concept manifolds identified in the paper's Llama 3.1 8B analysis:
-
-| Concept | Prompt template | Expected geometry | PCA variance (top 3) |
-|---|---|---|---|
-| Colors | "The hex code {h} is for the color" | Paraboloid | 95.4% |
-| Days | "It's {time} on {day}" | Circle | 80.4% |
-| Temperature | "Today it's {f} degrees Fahrenheit outside" | Line | 89.4% |
-| Years | "The date is year {y}" | Helix | 91.7% |
-
-#### PCA visualizations
-
-| | |
-|---|---|
-| ![Colors PCA](figures/gemma_pca/pca_colors.png) | ![Days PCA](figures/gemma_pca/pca_days.png) |
-| Colors — elongated paraboloid structure in 3D | Days — circular/periodic structure visible |
-| ![Temperature PCA](figures/gemma_pca/pca_temperature.png) | ![Years PCA](figures/gemma_pca/pca_years.png) |
-| Temperature — clustered linear structure | Years — helical/segmented progression |
-
-Key finding: the same manifold geometries documented in Llama 3.1 8B appear in Gemma 3 12B, confirming these are general properties of transformer representations, not model-specific artifacts.
-
-### Step 2: GemmaScope SAE Evaluation
-
-We evaluate pre-trained GemmaScope 2 JumpReLU SAEs (not TopK) at two widths: 16k and 65k latents.
-
-#### Restricted R² — 65k SAE
-
-![Restricted R² curves for 65k SAE](figures/gemma_eval/restricted_r2_65k.png)
-
-The 65k SAE achieves R² > 0.93 on all four manifolds at 32 atoms. Notable features:
-- **Colors** shows a dramatic jump from ~0.51 to ~0.88 at 16 atoms (the SAE finds a compact basis after threshold)
-- **Days** reaches 0.93 by just 8 atoms (circle is low-dimensional, easy to span)
-- **Years** hits 0.93 at only 2 atoms (helix well-captured by a small atom group)
-
-#### Restricted R² — 16k SAE
-
-![Restricted R² curves for 16k SAE](figures/gemma_eval/restricted_r2_16k.png)
-
-The narrower 16k SAE shows much more oscillatory R² curves — adding atoms sometimes *decreases* R² (negative interference from atoms that point away from the concept subspace). Peak R² at 32 atoms: colors 0.92, days 0.96, temperature 0.99, years 0.97.
-
-#### Ising coupling — 65k SAE
-
-![Ising coupling matrix for 65k SAE](figures/gemma_eval/ising_coupling_65k.png)
-
-271 active atoms sorted by concept assignment. Block-diagonal structure is visible but noisier than the synthetic case — expected since real model SAEs encode many more overlapping concepts.
-
-Concept assignments: colors (89 atoms), days (68), years (64), temperature (50).
-
-#### Ising coupling — 16k SAE
-
-![Ising coupling matrix for 16k SAE](figures/gemma_eval/ising_coupling_16k.png)
-
-256 active atoms, $|J|_{max} = 0.61$. Block structure slightly clearer at 16k (fewer atoms per concept → less redundancy), consistent with the paper's prediction that narrower SAEs are in the "capture" regime while wider ones trend toward "dilution."
+Note: using MSE loss; paper uses L1. Peak shifts to k≈4 with L1 (see `checkpoints_l1/results.json`).
 
 ---
 
-## Part 5: Bugs and Pitfalls — What Went Wrong Along the Way
+## Part 4: Extension to Gemma 3 12B
 
-### Bug 1: R² evaluation method — the single biggest improvement
+### Tokenization artifact and prompt engineering
 
-**Symptom**: Peak R² = 0.45 (paper reports ~0.9)
+![Hex tokenization distribution](figures/gemma_pca/color_hex_distribution.png)
 
-**Root cause**: We initially computed R² as `codes @ decoder_cols.T` vs ground truth — this constrains the mapping to pass through the decoder directions, which is wrong. SAE codes are always non-negative (from TopK), introducing a bias.
+Hex `#rrggbb` → 4–7 BPE tokens → 4 discrete PCA clusters (100% pure by token count). Fixed with zero-padded `rgb(rrr,ggg,bbb)` (always 17 tokens).
 
-**Fix sequence**:
-1. First attempt: center codes before projection → R² improved from 0.45 to 0.61
-2. Final fix: use **affine OLS** (least-squares regression from codes to concept-projected activations) → R² jumped to 0.80+
+![Color encoding comparison](figures/gemma_pca/pca_colors_all_encodings.png)
 
-**Pitfall for replicators**: The paper's eq. 14 implies affine OLS but doesn't emphasize it. If your restricted R² is stuck around 0.4–0.6 despite good VE, you're almost certainly using the wrong evaluation formula.
+Zero-padded RGB (bottom-left) gives a smooth continuous paraboloid; hex variants all show discrete clusters.
 
-### Bug 2: MSE vs. L1 reconstruction loss
+![Layer sweep — colors](figures/gemma_pca/pca_colors_rgb_layers.png)
 
-**Symptom**: R² plateau ~0.46 at k=10 with MSE loss
+Layer sweep (12/24/36/42): layer 42 shows most evenly distributed PCA variance (25.8/19.5/16.2%) and clearest hue curvature.
 
-**Root cause**: The paper uses L1 reconstruction error, not MSE. L1 encourages sparser, more faithful reconstructions rather than smoothing out errors across dimensions.
+### Years: month-injection required
 
-**Impact**: L1 training improved peak R² from 0.46 to 0.64 (before the OLS fix was applied). Combined with affine OLS: 0.83.
+![Years prompt comparison](figures/gemma_pca/pca_years_comparison.png)
 
-### Bug 3: Ising model fitting — three failed approaches before success
+Paper's `"The date is {year}"` prompt doesn't produce a helix in Gemma; `"The date is {month} {year}"` injects periodic structure via months and recovers it.
 
-**Attempt 1**: Correlation-based approximation → noisy, wrong magnitude, off by orders of magnitude vs. paper
+### GemmaScope 16k SAE — restricted R²
 
-**Attempt 2**: Per-node sklearn LogisticRegression with EBIC → correct in principle but catastrophically slow (30+ minutes per sparsity level for 300 atoms × 50k samples × 6 lambda values)
+![Restricted R² 16k](figures/gemma_eval/restricted_r2_16k.png)
 
-**Attempt 3 (wrong binarization)**: Used 0/1 binarization (is atom active?) instead of the paper's ±1 spins (is atom above/below its median?)
+Non-monotone R² curves consistent with paper's Fig. 4A. All four manifolds captured; temperature is near-linear (R² saturates quickly), colors requires most atoms.
 
-**Final working approach**: Joint pseudo-likelihood maximization with Adam + proximal L1 on GPU, enforced symmetry at each step. Runs in ~35 seconds on MPS. Key insight: L-BFGS doesn't work with L1 penalty (non-smooth); proximal ISTA also failed initially because the threshold killed all gradients during warmup.
+Multi-n sweep (n=16/32/64/128 atom pools):
 
-### Bug 4: Dead neurons at low $k$
+![Multi-n R²](figures/gemma_eval/restricted_r2_multi_n_16k.png)
 
-**Symptom**: 318/512 dead neurons at $k=4$, VE = 0.39
+Curves collapse for k ≤ min(n) — top atoms are identical across pool sizes; larger pools improve maximum R² but not early behavior.
 
-**Root cause**: With TopK and low $k$, most neurons never win the top-k competition and stop receiving gradients entirely.
+### GemmaScope 16k SAE — Figure 4B
 
-**Fix**: Differentiable auxiliary loss encouraging dead neuron pre-activations toward the TopK threshold + EMA-based dead neuron tracking + cosine LR schedule. Reduced dead neurons from 318 to 4 at $k=4$.
+![Figure 4B real](figures/gemma_eval/figure4b_16k.png)
 
-### Bug 5: OOM in data generation
+Post-hoc top-K thresholding on JumpReLU codes. Colors has distinctly lower RF spread (≈0.57–0.78) vs. 1D manifolds (≈0.9–1.0), consistent with its 2D hue/saturation structure.
 
-**Symptom**: Initial implementation tried to store per-manifold contributions for all 2M training samples → 49GB memory allocation
+### GemmaScope 16k SAE — Ising coupling
 
-**Fix**: Only store per-manifold ground truth for the eval set (100k samples, ~2.5GB). Training data only needs the final mixed $x$ vectors.
+![Ising 16k](figures/gemma_eval/ising_coupling_16k.png)
 
-### Bug 6 (Gemma): Wrong model variant
-
-**Symptom**: Using `google/gemma-3-12b-pt` (base/pretrained)
-
-**Fix**: The paper's real-model experiments use instruction-tuned models (where concepts are more cleanly represented after RLHF). Switched to `google/gemma-3-12b-it`.
-
-### Bug 7 (Gemma): Missing base dependencies
-
-**Symptom**: `ModuleNotFoundError` on `sklearn`, `transformers`, `accelerate`, etc. when running `uv run run_gemma_pca.py`
-
-**Root cause**: `scikit-learn`, `transformers`, `accelerate`, `safetensors`, and `huggingface_hub` were all in an optional `[real-models]` dependency group in `pyproject.toml` rather than in the base `dependencies` list. `uv run` uses only base dependencies by default.
-
-**Fix**: Moved all five packages into the main `dependencies` list.
-
-### Bug 8 (Gemma): Interrupted model download
-
-**Symptom**: Script hung indefinitely at model load — no error, no progress.
-
-**Root cause**: A prior download of `google/gemma-3-12b-it` had been interrupted, leaving 4 `.incomplete` blob shards (~25GB total) in the HF cache. The HuggingFace downloader tried to resume them silently, appearing as a hang. Compounding this: `HF_HOME` was set to `/nlp/scr/logan/.hf-cache` while the partial download was at `/juice2/scr2/logan/.hf-cache` — but both paths are symlinks to the same location.
-
-**Fix**: Ran `huggingface-cli download google/gemma-3-12b-it` to completion. Verified 6 clean shards with no `.incomplete` files before re-running.
-
-### Bug 9 (Gemma): Three API mismatches in the loading code
-
-Three separate errors surfaced once the model actually loaded:
-
-1. **`torch_dtype` deprecated**: `AutoModelForCausalLM.from_pretrained(..., torch_dtype=...)` raises a deprecation error in newer `transformers`; renamed to `dtype`.
-
-2. **`output_hidden_states` treated as a generation flag**: Passing it in `from_pretrained` caused the model to emit hidden states on every generation call rather than only when requested. Fixed by moving it to the forward call: `model(**inputs, output_hidden_states=True)`.
-
-3. **`Gemma3Config` wraps a nested `text_config`**: `model.config.hidden_size` raises `AttributeError` — `Gemma3Config` stores the actual transformer config in a sub-object. Fixed with `cfg = getattr(model.config, "text_config", model.config)` before reading `hidden_size` and `num_hidden_layers`.
-
-### Bug 10 (Gemma): float16 NaN overflow → switch to bfloat16
-
-**Symptom**: `ValueError: Input X contains NaN` from PCA after the first manifold successfully saved activations.
-
-**Root cause**: Loading a 12B-parameter model in `float16` causes overflow in the large intermediate activations — values exceed float16's max (~65504), producing `inf` which propagates to `NaN` in PCA.
-
-**Fix**: Switched dtype to `bfloat16`, which has the same dynamic range as float32 (8 exponent bits) while still halving memory vs. float32.
-
-### Bug 11 (Gemma): GemmaScope SAE checkpoint uses lowercase weight keys
-
-**Symptom**: `KeyError: 'W_enc'` when loading the GemmaScope JumpReLU SAE from HuggingFace.
-
-**Root cause**: The `JumpReLUSAE.from_pretrained` loader expected uppercase keys (`W_enc`, `W_dec`, `b_enc`, `b_dec`, `log_threshold`) matching the training code's `nn.Parameter` names, but the released GemmaScope checkpoints use lowercase (`w_enc`, `w_dec`, etc.).
-
-**Fix**: Added a remapping step in `from_pretrained` that lowercases keys from the safetensors file before loading into the state dict.
-
-### Bug 12 (Gemma): Wrong kwarg name for Ising regularization
-
-**Symptom**: `TypeError: compute_ising_coupling() got an unexpected keyword argument 'regularization'`
-
-**Root cause**: `evaluate_real.py` called `compute_ising_coupling(codes, regularization=lam)` but the underlying function in `evaluate.py` uses `lam` as the parameter name.
-
-**Fix**: Changed the call to `compute_ising_coupling(codes, lam=regularization)`.
-
-### Bug 13 (Gemma): Hardcoded `device="mps"` default in Ising coupling
-
-**Symptom**: `RuntimeError: Expected all tensors to be on the same device` — Ising tensors on `mps`, input codes on `cuda`.
-
-**Root cause**: `compute_ising_coupling` in `evaluate.py` had `device: str = "mps"` hardcoded as the default parameter, and `compute_ising_coupling_real` in `evaluate_real.py` didn't pass the device through from its caller.
-
-**Fix**: Changed the default to `device: str = "cpu"` and threaded the device argument through `compute_ising_coupling_real` → `compute_ising_coupling`.
+Restricted to 104 concept atoms (union of per-manifold greedy selections): years=25, colors=30, temperature=25, days=24. Block structure visible across all four manifolds.
 
 ---
 
-## Part 6: Discussion — What We Learned
+## Part 5: Extension — Line-Breaking Mechanistic Interpretability
 
-### What replicated cleanly
-- The three-regime structure (tiling → capture → dilution) is robust and appears clearly in both synthetic and real-model settings
-- Ising coupling analysis reliably reveals block-diagonal community structure in the capture regime
-- The same manifold geometries (circles, helices, paraboloids) appear across model families (Llama → Gemma)
+Using Gemma 3 12B on a fixed-width line-breaking task (arXiv:2601.04480).
 
-### What was harder than expected
-- The evaluation methodology (affine OLS) is the make-or-break detail — without it, results look like a failed replication
-- Ising fitting requires careful engineering (GPU-accelerated joint PLM, correct spin binarization, L1 proximal gradients)
-- Dead neurons are a serious problem at low $k$ and require dedicated mitigation
+**Behavioral eval**: p(newline) is 3–424× higher than p(next word) mid-line; nl_margin ramps sharply at 75–85% of target width.
 
-### Wider SAEs: capture or dilution?
-- The 65k SAE achieves higher R² (>0.93 everywhere at 32 atoms) vs. 16k (~0.92–0.99), suggesting more atoms available for manifold capture
-- But the 65k Ising structure is noisier — more atoms per concept means more redundancy and weaker pairwise coupling
-- This aligns with the paper's prediction: wider SAEs trend toward the dilution regime
+**SAE contrastive (resid L24)**: F14066 is a binary near-break detector (mean_40=337, mean_80=0); F885 is the largest-delta feature overall.
 
-### Implications for interpretability
-- Individual SAE features are rarely interpretable as standalone concepts when the underlying representation is a manifold
-- The right unit of analysis is *groups of co-firing atoms* (Ising communities), not individual directions
-- This explains prior negative results: feature instability across runs, brittle steering, and difficulty with automated interpretability
+**Layer probe**: R²>0.97 with char_pos from layer 1 onward, declining to ~0.73 at final layer; attention is the primary position writer (R²=0.856 at L0, 0.995 at L1).
+
+**Attn SAE position features**: GemmaScope `attn_out_all` 16k-small SAE at L1, F632: r=+0.905, r²=0.82 with char_pos — clean monotone ramp.
+
+**Ising on attn SAEs**: Fit on prose-text codes for attn_out L0/L1 and resid_post L24; community structure visible but sparse concept labeling (content noise swamps position signal at R_THRESH=0.35 — needs re-run with control sequences).
+
+![Ising linebreak attn L0](figures/linebreak_mech/ising_linebreak_attn_L0.png)
+![Ising linebreak attn L1](figures/linebreak_mech/ising_linebreak_attn_L1.png)
+![Ising linebreak resid L24](figures/linebreak_mech/ising_linebreak_resid_L24.png)
 
 ---
 
-## Part 7: Future Directions
+## Part 6: Key Bugs for Replicators
 
-- [TODO] Cross-layer transcoders (CLTs) from GemmaScope 2 — do they preserve manifold structure across layers?
-- [TODO] Unsupervised manifold discovery: can we find *new* concept manifolds purely from Ising community detection, without knowing what to look for?
-- [TODO] Line-breaking and formatting concepts — hypothesized manifold structure for token-level decisions
-- Scaling: does manifold capture improve or degrade as model scale increases?
+- **Affine OLS is essential**: Using `codes @ decoder_cols.T` directly gives R²≈0.45; affine least-squares (codes → concept activations) gives R²≈0.82. The paper implies it but doesn't emphasize it.
+- **L1 vs. MSE loss**: L1 peaks at lower k (≈4) matching the paper; MSE peaks later (≈14). If you're getting the wrong k for the capture regime, check your loss function.
+- **Ising binarization**: Must use ±1 spins (sign of activation), not 0/1. Joint pseudo-likelihood with Adam + proximal L1 on GPU (~35s); L-BFGS doesn't work with L1.
+- **Dead neurons**: 318/512 dead at k=4 without mitigation. Fix: auxiliary loss pushing dead neuron pre-activations toward TopK threshold + EMA firing rate tracking.
+- **Gemma BPE artifact**: Hex color prompts → discrete PCA clusters. Use zero-padded RGB.
+- **GemmaScope checkpoint keys**: Released weights use lowercase (`w_enc`, `w_dec`); naive loader expects uppercase. Remap before `load_state_dict`.
+- **Gemma dtype**: float16 overflows on 12B intermediates → NaN. Use bfloat16.
 
 ---
 
 ## Appendix: Experimental Details
 
-- **Hardware**: Apple M-series (MPS) for synthetic experiments; remote GPU server for Gemma inference
-- **Training time**: ~30 min for full 9-SAE synthetic sweep on MPS; Gemma activation harvesting dependent on model loading
-- **GemmaScope SAEs used**: `google/gemma-scope-2-12b-it`, layer 24, resid_post, widths 16k and 65k, "medium" L0 target
-- **Code**: Built iteratively with Claude Code assistance across ~3 sessions
+- **Hardware**: GPU server (cuda) for all runs
+- **Synthetic**: ~full sweep took ~several hours; checkpoints at `checkpoints_mse/sae_k*.pt`
+- **GemmaScope SAEs**: `google/gemma-scope-2-12b-it`, layer 24, resid_post, 16k width, medium L0≈44.7
+- **Scripts**: `run_synthetic.py`, `run_synthetic_ising.py`, `plot_synthetic_fig4.py`, `run_gemma_eval.py`, `run_gemma_linebreak_eval.py`, `run_gemma_linebreak_mech.py`
