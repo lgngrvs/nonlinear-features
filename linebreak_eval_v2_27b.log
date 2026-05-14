@@ -1,0 +1,81 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Device: cuda
+Loading google/gemma-3-27b-it (torch.bfloat16, device=cuda)...
+Loading weights:   0%|          | 0/1247 [00:00<?, ?it/s]Loading weights:   0%|          | 1/1247 [00:00<04:08,  5.02it/s]Loading weights:   0%|          | 5/1247 [00:00<01:08, 18.25it/s]Loading weights:   1%|▏         | 18/1247 [00:00<00:24, 49.65it/s]Loading weights:   2%|▏         | 30/1247 [00:00<00:18, 66.13it/s]Loading weights:   3%|▎         | 42/1247 [00:00<00:15, 76.05it/s]Loading weights:   4%|▍         | 50/1247 [00:00<00:15, 75.27it/s]Loading weights:   5%|▍         | 58/1247 [00:00<00:17, 66.21it/s]Loading weights:   6%|▌         | 69/1247 [00:01<00:16, 73.08it/s]Loading weights:   6%|▋         | 81/1247 [00:01<00:14, 80.89it/s]Loading weights:   7%|▋         | 90/1247 [00:01<00:14, 79.52it/s]Loading weights:   8%|▊         | 99/1247 [00:01<00:15, 73.83it/s]Loading weights:   9%|▊         | 108/1247 [00:01<00:15, 73.51it/s]Loading weights:  10%|▉         | 120/1247 [00:01<00:13, 81.30it/s]Loading weights:  10%|█         | 129/1247 [00:01<00:13, 81.98it/s]Loading weights:  11%|█         | 138/1247 [00:01<00:15, 73.64it/s]Loading weights:  12%|█▏        | 147/1247 [00:02<00:16, 66.63it/s]Loading weights:  13%|█▎        | 160/1247 [00:02<00:14, 77.55it/s]Loading weights:  14%|█▍        | 172/1247 [00:02<00:12, 82.71it/s]Loading weights:  15%|█▍        | 181/1247 [00:02<00:12, 82.46it/s]Loading weights:  15%|█▌        | 190/1247 [00:02<00:14, 74.44it/s]Loading weights:  16%|█▌        | 199/1247 [00:02<00:14, 74.64it/s]Loading weights:  17%|█▋        | 211/1247 [00:02<00:12, 82.52it/s]Loading weights:  18%|█▊        | 224/1247 [00:03<00:10, 93.09it/s]Loading weights:  19%|█▉        | 238/1247 [00:03<00:10, 100.76it/s]Loading weights:  20%|██        | 251/1247 [00:03<00:09, 104.03it/s]Loading weights:  21%|██        | 263/1247 [00:03<00:09, 106.39it/s]Loading weights:  22%|██▏       | 274/1247 [00:03<00:09, 103.26it/s]Loading weights:  23%|██▎       | 285/1247 [00:03<00:10, 90.04it/s] Loading weights:  24%|██▎       | 295/1247 [00:03<00:12, 78.53it/s]Loading weights:  24%|██▍       | 304/1247 [00:03<00:13, 71.77it/s]Loading weights:  25%|██▌       | 316/1247 [00:04<00:11, 78.95it/s]Loading weights:  26%|██▌       | 327/1247 [00:04<00:11, 81.59it/s]Loading weights:  27%|██▋       | 336/1247 [00:04<00:11, 82.05it/s]Loading weights:  28%|██▊       | 345/1247 [00:04<00:11, 75.40it/s]Loading weights:  28%|██▊       | 355/1247 [00:04<00:11, 77.24it/s]Loading weights:  29%|██▉       | 366/1247 [00:04<00:10, 80.69it/s]Loading weights:  30%|███       | 375/1247 [00:04<00:10, 82.97it/s]Loading weights:  31%|███       | 384/1247 [00:04<00:11, 77.96it/s]Loading weights:  32%|███▏      | 394/1247 [00:05<00:10, 79.37it/s]Loading weights:  33%|███▎      | 406/1247 [00:05<00:09, 84.41it/s]Loading weights:  33%|███▎      | 415/1247 [00:05<00:09, 84.25it/s]Loading weights:  34%|███▍      | 424/1247 [00:05<00:10, 76.17it/s]Loading weights:  35%|███▍      | 433/1247 [00:05<00:10, 74.62it/s]Loading weights:  36%|███▌      | 445/1247 [00:05<00:09, 80.59it/s]Loading weights:  36%|███▋      | 454/1247 [00:05<00:09, 80.76it/s]Loading weights:  37%|███▋      | 463/1247 [00:05<00:10, 72.34it/s]Loading weights:  38%|███▊      | 472/1247 [00:06<00:10, 72.66it/s]Loading weights:  39%|███▉      | 484/1247 [00:06<00:09, 80.47it/s]Loading weights:  40%|███▉      | 493/1247 [00:06<00:09, 81.86it/s]Loading weights:  40%|████      | 502/1247 [00:06<00:10, 73.16it/s]Loading weights:  41%|████      | 511/1247 [00:06<00:10, 72.94it/s]Loading weights:  42%|████▏     | 523/1247 [00:06<00:09, 80.10it/s]Loading weights:  43%|████▎     | 532/1247 [00:06<00:08, 80.52it/s]Loading weights:  43%|████▎     | 541/1247 [00:06<00:09, 72.29it/s]Loading weights:  44%|████▍     | 550/1247 [00:07<00:09, 72.64it/s]Loading weights:  45%|████▌     | 562/1247 [00:07<00:08, 80.15it/s]Loading weights:  46%|████▌     | 571/1247 [00:07<00:08, 80.79it/s]Loading weights:  47%|████▋     | 580/1247 [00:07<00:09, 72.16it/s]Loading weights:  47%|████▋     | 589/1247 [00:07<00:09, 72.66it/s]Loading weights:  48%|████▊     | 601/1247 [00:07<00:08, 79.43it/s]Loading weights:  49%|████▉     | 610/1247 [00:07<00:07, 79.97it/s]Loading weights:  50%|████▉     | 619/1247 [00:08<00:08, 70.95it/s]Loading weights:  50%|█████     | 628/1247 [00:08<00:08, 72.04it/s]Loading weights:  51%|█████     | 639/1247 [00:08<00:08, 75.86it/s]Loading weights:  52%|█████▏    | 647/1247 [00:08<00:07, 76.39it/s]Loading weights:  53%|█████▎    | 655/1247 [00:08<00:08, 66.04it/s]Loading weights:  53%|█████▎    | 667/1247 [00:08<00:07, 75.10it/s]Loading weights:  54%|█████▍    | 679/1247 [00:08<00:06, 81.36it/s]Loading weights:  55%|█████▌    | 688/1247 [00:08<00:06, 81.17it/s]Loading weights:  56%|█████▌    | 697/1247 [00:09<00:07, 72.33it/s]Loading weights:  57%|█████▋    | 706/1247 [00:09<00:07, 72.96it/s]Loading weights:  58%|█████▊    | 718/1247 [00:09<00:06, 80.12it/s]Loading weights:  58%|█████▊    | 727/1247 [00:09<00:06, 80.45it/s]Loading weights:  59%|█████▉    | 736/1247 [00:09<00:07, 72.66it/s]Loading weights:  60%|█████▉    | 745/1247 [00:09<00:06, 72.82it/s]Loading weights:  61%|██████    | 757/1247 [00:09<00:06, 79.67it/s]Loading weights:  61%|██████▏   | 766/1247 [00:09<00:05, 80.59it/s]Loading weights:  62%|██████▏   | 775/1247 [00:10<00:06, 73.44it/s]Loading weights:  63%|██████▎   | 784/1247 [00:10<00:06, 73.94it/s]Loading weights:  64%|██████▍   | 796/1247 [00:10<00:06, 72.79it/s]Loading weights:  70%|██████▉   | 867/1247 [00:10<00:01, 222.15it/s]Loading weights:  84%|████████▍ | 1050/1247 [00:10<00:00, 624.86it/s]Loading weights:  98%|█████████▊| 1222/1247 [00:10<00:00, 591.97it/s]Loading weights: 100%|██████████| 1247/1247 [00:10<00:00, 114.79it/s]
+  d_model=5376, layers=62
+
+============================================================
+GENERATION EVAL
+============================================================
+gen width=40:   0%|          | 0/12 [00:00<?, ?it/s]gen width=40:   8%|▊         | 1/12 [00:05<01:02,  5.68s/it]gen width=40:  17%|█▋        | 2/12 [00:11<00:58,  5.86s/it]gen width=40:  25%|██▌       | 3/12 [00:17<00:52,  5.83s/it]gen width=40:  33%|███▎      | 4/12 [00:22<00:45,  5.63s/it]gen width=40:  42%|████▏     | 5/12 [00:28<00:40,  5.72s/it]gen width=40:  50%|█████     | 6/12 [00:33<00:31,  5.27s/it]gen width=40:  58%|█████▊    | 7/12 [00:37<00:24,  4.91s/it]gen width=40:  67%|██████▋   | 8/12 [00:42<00:20,  5.07s/it]gen width=40:  75%|███████▌  | 9/12 [00:48<00:15,  5.18s/it]gen width=40:  83%|████████▎ | 10/12 [00:53<00:10,  5.22s/it]gen width=40:  92%|█████████▏| 11/12 [00:57<00:04,  4.99s/it]gen width=40: 100%|██████████| 12/12 [01:02<00:00,  4.98s/it]gen width=40: 100%|██████████| 12/12 [01:02<00:00,  5.23s/it]
+  width=40: exact=0.0%  overflow=0.000  word_pres=0.990
+gen width=60:   0%|          | 0/12 [00:00<?, ?it/s]gen width=60:   8%|▊         | 1/12 [00:05<00:55,  5.04s/it]gen width=60:  17%|█▋        | 2/12 [00:11<00:55,  5.60s/it]gen width=60:  25%|██▌       | 3/12 [00:16<00:49,  5.47s/it]gen width=60:  33%|███▎      | 4/12 [00:21<00:43,  5.38s/it]gen width=60:  42%|████▏     | 5/12 [00:27<00:38,  5.46s/it]gen width=60:  50%|█████     | 6/12 [00:31<00:30,  5.09s/it]gen width=60:  58%|█████▊    | 7/12 [00:35<00:23,  4.80s/it]gen width=60:  67%|██████▋   | 8/12 [00:41<00:19,  4.99s/it]gen width=60:  75%|███████▌  | 9/12 [00:45<00:14,  4.89s/it]gen width=60:  83%|████████▎ | 10/12 [00:50<00:09,  4.88s/it]gen width=60:  92%|█████████▏| 11/12 [00:54<00:04,  4.55s/it]gen width=60: 100%|██████████| 12/12 [00:59<00:00,  4.64s/it]gen width=60: 100%|██████████| 12/12 [00:59<00:00,  4.95s/it]
+  width=60: exact=0.0%  overflow=0.000  word_pres=1.000
+gen width=80:   0%|          | 0/12 [00:00<?, ?it/s]gen width=80:   8%|▊         | 1/12 [00:04<00:52,  4.76s/it]gen width=80:  17%|█▋        | 2/12 [00:10<00:50,  5.10s/it]gen width=80:  25%|██▌       | 3/12 [00:14<00:44,  4.99s/it]gen width=80:  33%|███▎      | 4/12 [00:19<00:39,  4.94s/it]gen width=80:  42%|████▏     | 5/12 [00:24<00:35,  5.01s/it]gen width=80:  50%|█████     | 6/12 [00:28<00:27,  4.60s/it]gen width=80:  58%|█████▊    | 7/12 [00:32<00:20,  4.19s/it]gen width=80:  67%|██████▋   | 8/12 [00:36<00:17,  4.34s/it]gen width=80:  75%|███████▌  | 9/12 [00:40<00:12,  4.24s/it]gen width=80:  83%|████████▎ | 10/12 [00:45<00:08,  4.28s/it]gen width=80:  92%|█████████▏| 11/12 [00:48<00:04,  4.08s/it]gen width=80: 100%|██████████| 12/12 [00:53<00:00,  4.26s/it]gen width=80: 100%|██████████| 12/12 [00:53<00:00,  4.45s/it]
+  width=80: exact=8.3%  overflow=0.000  word_pres=0.991
+
+============================================================
+LOGIT PROBE EVAL
+============================================================
+Newline token: id=107  repr='\n'
+logit width=40:   0%|          | 0/12 [00:00<?, ?it/s]logit width=40:   8%|▊         | 1/12 [00:00<00:07,  1.40it/s]logit width=40:  17%|█▋        | 2/12 [00:01<00:08,  1.18it/s]logit width=40:  25%|██▌       | 3/12 [00:02<00:06,  1.29it/s]logit width=40:  33%|███▎      | 4/12 [00:03<00:05,  1.34it/s]logit width=40:  42%|████▏     | 5/12 [00:03<00:05,  1.29it/s]logit width=40:  50%|█████     | 6/12 [00:04<00:04,  1.41it/s]logit width=40:  58%|█████▊    | 7/12 [00:05<00:03,  1.49it/s]logit width=40:  67%|██████▋   | 8/12 [00:05<00:02,  1.39it/s]logit width=40:  75%|███████▌  | 9/12 [00:06<00:02,  1.41it/s]logit width=40:  83%|████████▎ | 10/12 [00:07<00:01,  1.35it/s]logit width=40:  92%|█████████▏| 11/12 [00:07<00:00,  1.44it/s]logit width=40: 100%|██████████| 12/12 [00:08<00:00,  1.31it/s]logit width=40: 100%|██████████| 12/12 [00:08<00:00,  1.35it/s]
+  width=40: break_acc=1.000 (n=45)  no_break_acc=0.323 (n=31)  break_margin=15.992
+  char-pos analysis (log_p(newline)-log_p(word) by position, width=40):
+     pos   nl_margin      n
+     2.0        +nan      0  
+     6.0        +nan      0  
+    10.0      +2.309      6  ██████████████
+    14.0      -1.489      8  ███████
+    18.0      +5.002      7  ████████████████████
+    22.0      +1.219      6  ████████████
+    26.0      +4.253      2  ██████████████████
+    30.0     +14.989      5  ███████████████████████████████████████
+    34.0     +17.539     14  █████████████████████████████████████████████
+    38.0     +15.286     17  ████████████████████████████████████████
+logit width=60:   0%|          | 0/12 [00:00<?, ?it/s]logit width=60:   8%|▊         | 1/12 [00:00<00:05,  2.14it/s]logit width=60:  17%|█▋        | 2/12 [00:01<00:05,  1.86it/s]logit width=60:  25%|██▌       | 3/12 [00:01<00:05,  1.78it/s]logit width=60:  33%|███▎      | 4/12 [00:02<00:04,  1.91it/s]logit width=60:  42%|████▏     | 5/12 [00:02<00:03,  1.83it/s]logit width=60:  50%|█████     | 6/12 [00:03<00:03,  1.93it/s]logit width=60:  58%|█████▊    | 7/12 [00:03<00:02,  2.16it/s]logit width=60:  67%|██████▋   | 8/12 [00:04<00:02,  1.85it/s]logit width=60:  75%|███████▌  | 9/12 [00:04<00:01,  1.93it/s]logit width=60:  83%|████████▎ | 10/12 [00:05<00:01,  1.86it/s]logit width=60:  92%|█████████▏| 11/12 [00:05<00:00,  1.94it/s]logit width=60: 100%|██████████| 12/12 [00:06<00:00,  1.75it/s]logit width=60: 100%|██████████| 12/12 [00:06<00:00,  1.87it/s]
+  width=60: break_acc=1.000 (n=19)  no_break_acc=0.472 (n=36)  break_margin=15.027
+  char-pos analysis (log_p(newline)-log_p(word) by position, width=60):
+     pos   nl_margin      n
+     3.0        +nan      0  
+     9.0      -2.757      2  ████
+    15.0      -2.966      4  ████
+    21.0      -0.645      8  ████████
+    27.0      +3.841      4  █████████████████
+    33.0      +2.550      8  ███████████████
+    39.0      +3.546      8  █████████████████
+    45.0      -2.377      2  █████
+    51.0     +14.600      4  ███████████████████████████████████████
+    57.0     +15.473     14  ████████████████████████████████████████
+logit width=80:   0%|          | 0/12 [00:00<?, ?it/s]logit width=80:   8%|▊         | 1/12 [00:00<00:01,  8.57it/s]logit width=80:  17%|█▋        | 2/12 [00:00<00:02,  3.91it/s]logit width=80:  25%|██▌       | 3/12 [00:00<00:02,  4.08it/s]logit width=80:  33%|███▎      | 4/12 [00:00<00:01,  4.17it/s]logit width=80:  42%|████▏     | 5/12 [00:01<00:02,  3.10it/s]logit width=80:  50%|█████     | 6/12 [00:01<00:01,  3.01it/s]logit width=80:  58%|█████▊    | 7/12 [00:01<00:01,  3.34it/s]logit width=80:  67%|██████▋   | 8/12 [00:02<00:01,  3.17it/s]logit width=80:  75%|███████▌  | 9/12 [00:02<00:00,  3.06it/s]logit width=80:  83%|████████▎ | 10/12 [00:03<00:00,  2.70it/s]logit width=80:  92%|█████████▏| 11/12 [00:03<00:00,  3.05it/s]logit width=80: 100%|██████████| 12/12 [00:03<00:00,  2.70it/s]logit width=80: 100%|██████████| 12/12 [00:03<00:00,  3.11it/s]
+  width=80: break_acc=1.000 (n=6)  no_break_acc=0.407 (n=27)  break_margin=13.736
+  char-pos analysis (log_p(newline)-log_p(word) by position, width=80):
+     pos   nl_margin      n
+     4.0        +nan      0  
+    12.0      -6.056      2  
+    20.0      +1.651      3  █████████████
+    28.0      +3.672      4  █████████████████
+    36.0      +4.701      6  ███████████████████
+    44.0      +0.389      4  ██████████
+    52.0      +0.165      4  ██████████
+    60.0      +6.415      3  ██████████████████████
+    68.0     +11.364      3  ████████████████████████████████
+    76.0     +14.873      3  ███████████████████████████████████████
+
+Results saved to figures/linebreak_eval_v2/linebreak_eval_results.json
+
+============================================================
+SUMMARY
+============================================================
+Generation eval (instruction-following):
+  width=40:  exact=0.0%  overflow=0.000  word_pres=0.990
+  width=60:  exact=0.0%  overflow=0.000  word_pres=1.000
+  width=80:  exact=8.3%  overflow=0.000  word_pres=0.991
+  Metrics: exact=formatting matches oracle; overflow=lines exceeding width;
+           word_pres=fraction of words preserved (random baseline ~0.5)
+Logit probe eval (natural next-token):
+  width=40:  break_acc=1.000  no_break_acc=0.323  margin=15.992
+  width=60:  break_acc=1.000  no_break_acc=0.472  margin=15.027
+  width=80:  break_acc=1.000  no_break_acc=0.407  margin=13.736
+  Metrics: break_acc=p(newline)>p(word) at break pts (random baseline 0.5);
+           no_break_acc=p(word)>p(newline) at mid-line pts;
+           margin=mean log-prob difference at break points

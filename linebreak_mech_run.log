@@ -1,0 +1,74 @@
+Device: cuda
+Loading google/gemma-3-12b-it...
+Loading weights:   0%|          | 0/1065 [00:00<?, ?it/s]Loading weights:   0%|          | 1/1065 [00:00<02:12,  8.02it/s]Loading weights:   2%|▏         | 16/1065 [00:00<00:12, 82.54it/s]Loading weights:   3%|▎         | 30/1065 [00:00<00:09, 104.83it/s]Loading weights:   4%|▍         | 44/1065 [00:00<00:09, 109.66it/s]Loading weights:   6%|▌         | 62/1065 [00:00<00:07, 132.51it/s]Loading weights:   7%|▋         | 76/1065 [00:00<00:07, 129.94it/s]Loading weights:   8%|▊         | 90/1065 [00:00<00:07, 130.97it/s]Loading weights:  10%|▉         | 104/1065 [00:00<00:07, 130.03it/s]Loading weights:  11%|█         | 118/1065 [00:00<00:07, 130.70it/s]Loading weights:  12%|█▏        | 132/1065 [00:01<00:07, 131.67it/s]Loading weights:  14%|█▎        | 146/1065 [00:01<00:07, 123.92it/s]Loading weights:  15%|█▍        | 159/1065 [00:01<00:07, 125.40it/s]Loading weights:  16%|█▌        | 173/1065 [00:01<00:07, 120.63it/s]Loading weights:  17%|█▋        | 186/1065 [00:01<00:07, 123.10it/s]Loading weights:  19%|█▉        | 200/1065 [00:01<00:07, 119.20it/s]Loading weights:  20%|██        | 213/1065 [00:01<00:07, 121.03it/s]Loading weights:  22%|██▏       | 231/1065 [00:01<00:06, 134.82it/s]Loading weights:  23%|██▎       | 250/1065 [00:01<00:05, 147.34it/s]Loading weights:  26%|██▌       | 276/1065 [00:02<00:04, 176.44it/s]Loading weights:  28%|██▊       | 300/1065 [00:02<00:03, 191.83it/s]Loading weights:  30%|███       | 320/1065 [00:02<00:04, 182.29it/s]Loading weights:  32%|███▏      | 341/1065 [00:02<00:03, 183.57it/s]Loading weights:  34%|███▍      | 360/1065 [00:02<00:03, 177.29it/s]Loading weights:  36%|███▌      | 379/1065 [00:02<00:03, 173.44it/s]Loading weights:  37%|███▋      | 397/1065 [00:02<00:03, 174.32it/s]Loading weights:  40%|███▉      | 421/1065 [00:02<00:03, 188.64it/s]Loading weights:  42%|████▏     | 447/1065 [00:02<00:03, 200.94it/s]Loading weights:  44%|████▍     | 471/1065 [00:03<00:02, 210.40it/s]Loading weights:  46%|████▋     | 493/1065 [00:03<00:03, 186.92it/s]Loading weights:  48%|████▊     | 513/1065 [00:03<00:03, 159.25it/s]Loading weights:  50%|████▉     | 531/1065 [00:03<00:03, 163.63it/s]Loading weights:  52%|█████▏    | 549/1065 [00:03<00:03, 156.41it/s]Loading weights:  53%|█████▎    | 566/1065 [00:03<00:03, 145.44it/s]Loading weights:  55%|█████▍    | 583/1065 [00:03<00:03, 150.14it/s]Loading weights:  56%|█████▌    | 599/1065 [00:03<00:03, 149.46it/s]Loading weights:  58%|█████▊    | 615/1065 [00:04<00:03, 137.01it/s]Loading weights:  69%|██████▊   | 730/1065 [00:04<00:00, 392.60it/s]Loading weights:  85%|████████▍ | 900/1065 [00:04<00:00, 738.84it/s]Loading weights: 100%|██████████| 1065/1065 [00:04<00:00, 239.94it/s]
+  d_model=3840, layers=48
+Loading SAE from /nlp/scr/logan/.hf-cache/hub/models--google--gemma-scope-2-12b-it/snapshots/4c419f1ba0be8b7754d4151d4f26c23b92a9029e/resid_post/layer_24_width_16k_l0_medium...
+  SAE: d_in=3840, d_sae=16384
+
+============================================================
+COLLECTING SAE RECORDS
+============================================================
+SAE record collection:   0%|          | 0/12 [00:00<?, ?it/s]SAE record collection:   8%|▊         | 1/12 [00:01<00:19,  1.76s/it]SAE record collection:  17%|█▋        | 2/12 [00:02<00:12,  1.25s/it]SAE record collection:  25%|██▌       | 3/12 [00:03<00:09,  1.06s/it]SAE record collection:  33%|███▎      | 4/12 [00:04<00:07,  1.06it/s]SAE record collection:  42%|████▏     | 5/12 [00:05<00:06,  1.01it/s]SAE record collection:  50%|█████     | 6/12 [00:06<00:05,  1.09it/s]SAE record collection:  58%|█████▊    | 7/12 [00:06<00:04,  1.18it/s]SAE record collection:  67%|██████▋   | 8/12 [00:07<00:03,  1.09it/s]SAE record collection:  75%|███████▌  | 9/12 [00:08<00:02,  1.06it/s]SAE record collection:  83%|████████▎ | 10/12 [00:09<00:01,  1.01it/s]SAE record collection:  92%|█████████▏| 11/12 [00:10<00:00,  1.07it/s]SAE record collection: 100%|██████████| 12/12 [00:11<00:00,  1.01s/it]SAE record collection: 100%|██████████| 12/12 [00:11<00:00,  1.00it/s]
+  Total records: 937
+
+============================================================
+CONTRASTIVE ANALYSIS
+============================================================
+
+  Contrastive: n_narrow=65, n_wide=37
+  Top features MORE active near break (width=40, pos≈34):
+    F  885: delta=+355.4540  mean_40=1434.5519  mean_80=1079.0979
+    F14066: delta=+337.0815  mean_40=337.0815  mean_80=0.0000
+    F  309: delta=+278.6992  mean_40=379.4786  mean_80=100.7794
+    F 5491: delta=+210.1791  mean_40=456.5145  mean_80=246.3354
+    F  773: delta=+146.7883  mean_40=819.9357  mean_80=673.1475
+    F 5284: delta=+137.9991  mean_40=137.9991  mean_80=0.0000
+    F 5734: delta=+118.0776  mean_40=127.2206  mean_80=9.1430
+    F 6264: delta=+114.0781  mean_40=142.3836  mean_80=28.3056
+  Top features LESS active near break:
+    F  300: delta=-332.8585  mean_40=172.0606  mean_80=504.9190
+    F  485: delta=-290.5829  mean_40=1124.2704  mean_80=1414.8533
+    F  183: delta=-184.1489  mean_40=553.3020  mean_80=737.4509
+    F  295: delta=-159.6824  mean_40=283.8663  mean_80=443.5488
+    F  498: delta=-152.2382  mean_40=167.4050  mean_80=319.6432
+    F  358: delta=-125.1688  mean_40=36.6396  mean_80=161.8083
+    F  433: delta=-118.0641  mean_40=303.2633  mean_80=421.3274
+    F  224: delta=-108.6268  mean_40=24.3057  mean_80=132.9326
+  Saved figures/linebreak_mech/sae_contrastive.html
+  Saved feature profiles for features: [885, 14066, 309, 5491, 300, 485, 183, 295]
+
+============================================================
+SAE PCA
+============================================================
+
+  PCA: 937 points, variance explained: [0.44616768 0.11045387 0.06723993]
+  Saved figures/linebreak_mech/sae_pca_remaining.html
+  Saved figures/linebreak_mech/sae_pca_width.html
+
+============================================================
+REPEATED-TOKEN CONTROL
+============================================================
+  Control width=40: 16 positions
+  Control width=80: 29 positions
+  Saved figures/linebreak_mech/sae_control_profiles.html
+
+============================================================
+LAYER PROBE
+============================================================
+Layer probe:   0%|          | 0/8 [00:00<?, ?it/s]Layer probe:  12%|█▎        | 1/8 [00:00<00:01,  6.55it/s]Layer probe:  25%|██▌       | 2/8 [00:00<00:00,  6.55it/s]Layer probe:  38%|███▊      | 3/8 [00:00<00:00,  6.44it/s]Layer probe:  50%|█████     | 4/8 [00:00<00:00,  6.40it/s]Layer probe:  62%|██████▎   | 5/8 [00:00<00:00,  6.36it/s]Layer probe:  75%|███████▌  | 6/8 [00:00<00:00,  6.39it/s]Layer probe:  88%|████████▊ | 7/8 [00:01<00:00,  6.42it/s]Layer probe: 100%|██████████| 8/8 [00:01<00:00,  6.39it/s]Layer probe: 100%|██████████| 8/8 [00:01<00:00,  6.41it/s]
+  Layer  0: R²=-0.666  (n=279)
+  Layer  4: R²=-0.314  (n=279)
+  Layer  8: R²=-0.780  (n=279)
+  Layer 12: R²=-3.378  (n=279)
+  Layer 16: R²=-3.024  (n=279)
+  Layer 20: R²=-0.697  (n=279)
+  Layer 24: R²=-0.991  (n=279)
+  Layer 28: R²=-1.450  (n=279)
+  Layer 32: R²=-1.936  (n=279)
+  Layer 36: R²=-5.895  (n=279)
+  Layer 40: R²=-3.979  (n=279)
+  Layer 44: R²=-7.099  (n=279)
+  Saved figures/linebreak_mech/layer_probe_r2.html
+
+All results saved to figures/linebreak_mech/
+Summary: figures/linebreak_mech/mech_summary.json

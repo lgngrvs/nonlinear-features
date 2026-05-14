@@ -1,0 +1,434 @@
+{
+  "model": "google/gemma-3-27b-it",
+  "device": "cuda",
+  "n_texts": 12,
+  "widths": [
+    40,
+    60,
+    80
+  ],
+  "generation": [
+    {
+      "width": 40,
+      "exact_match_rate": 0.0,
+      "mean_overflow_rate": 0.0,
+      "mean_word_preservation": 0.9901620370370371,
+      "samples": [
+        {
+          "gold": "The quick brown fox jumps over the lazy\ndog. A stitch in time saves nine. Early\nto bed and early to rise makes a man\nhealthy wealthy and wise. All that\nglitters is not gold. Actions speak\nlouder than words.",
+          "pred": "The quick brown fox jumps\nover the lazy dog.\nA stitch in time saves\nnine. Early to bed and\nearly to rise makes a\nman healthy wealthy and\nwise. All that glitters\nis not gold. Actions\nspeak louder than words.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "It was the best of times it was the\nworst of times it was the age of wisdom\nit was the age of foolishness it was the\nepoch of belief it was the epoch of\nincredulity it was the season of light\nit was the season of darkness.",
+          "pred": "It was the best of times\nit was the worst of times\nit was the age of wisdom\nit was the age of\nfoolishness it was the\nepoch of belief it was\nthe epoch of incredulity\nit was the season of\nlight it was the season\nof darkness.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "To be or not to be that is the question\nwhether tis nobler in the mind to suffer\nthe slings and arrows of outrageous\nfortune or to take arms against a sea of\ntroubles and by opposing end them to die\nto sleep no more.",
+          "pred": "To be or not to be\nthat is the question\nwhether tis nobler in\nthe mind to suffer the\nslings and arrows of\noutrageous fortune or\nto take arms against a\nsea of troubles and by\nopposing end them to\ndie to sleep no more.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Ask not what your country can do for you\nask what you can do for your country.\nOne small step for man one giant leap\nfor mankind. We choose to go to the moon\nnot because it is easy but because it is\nhard.",
+          "pred": "Ask not what your country\ncan do for you ask what\nyou can do for your\ncountry. One small step\nfor man one giant leap\nfor mankind. We choose\nto go to the moon not\nbecause it is easy but\nbecause it is hard.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The only thing we have to fear is fear\nitself. Four score and seven years ago\nour fathers brought forth on this\ncontinent a new nation conceived in\nliberty and dedicated to the proposition\nthat all men are created equal and\nendowed with inalienable rights.",
+          "pred": "The only thing we have\nto fear is fear itself.\nFour score and seven\nyears ago our fathers\nbrought forth on this\ncontinent a new nation\nconceived in liberty\nand dedicated to the\nproposition that all\nmen are created equal\nand endowed with\ninalienable rights.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Photons are the quanta of\nelectromagnetic radiation carrying\nenergy inversely proportional to\nwavelength. The gradient descent\nalgorithm iteratively moves parameters\nin the direction of steepest loss\nreduction scaled by a learning rate.",
+          "pred": "Photons are the quanta of\nelectromagnetic radiation\ncarrying energy inversely\nproportional to wavelength.\nThe gradient descent\nalgorithm iteratively moves\nparameters in the direction\nof steepest loss reduction\nscaled by a learning rate.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Neural networks learn hierarchical\nrepresentations through successive\ntransformations of the input data using\nlearnable weight matrices and nonlinear\nactivation functions such as the\nrectified linear unit or sigmoid.",
+          "pred": "Neural networks learn\nhierarchical\nrepresentations through\nsuccessive\ntransformations of the\ninput data using\nlearnable weight\nmatrices and nonlinear\nactivation functions\nsuch as the rectified\nlinear unit or sigmoid.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Scientists discovered a new species of\ndeep-sea fish exhibiting bioluminescence\nadapted for communication in the aphotic\nzone where no sunlight penetrates. The\norganism produces light through a\nluciferin-luciferase reaction catalyzed\nby specific enzymes.",
+          "pred": "Scientists discovered a new\nspecies of deep-sea fish\nexhibiting bioluminescence\nadapted for communication\nin the aphotic zone where\nno sunlight penetrates. The\norganism produces light\nthrough a luciferin-luciferase\nreaction catalyzed by\nspecific enzymes.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The transformer architecture uses self-\nattention mechanisms to weigh the\nimportance of different positions in the\ninput sequence when computing\nrepresentations allowing parallel\ncomputation and capturing long-range\ndependencies that recurrent models often\nstruggle with.",
+          "pred": "The transformer\narchitecture uses\nself-attention\nmechanisms to weigh\nthe importance of\ndifferent positions\nin the input\nsequence when\ncomputing\nrepresentations\nallowing parallel\ncomputation and\ncapturing long-range\ndependencies that\nrecurrent models\noften struggle with.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 0.9375
+        },
+        {
+          "gold": "Mechanistic interpretability aims to\nreverse-engineer the computations\nperformed by neural networks by\nidentifying circuits and representations\nthat implement specific behaviors or\ncapabilities within the model weights\nusing tools such as activation patching\nand sparse autoencoders.",
+          "pred": "Mechanistic interpretability\naims to reverse-engineer the\ncomputations performed by\nneural networks by identifying\ncircuits and representations\nthat implement specific\nbehaviors or capabilities\nwithin the model weights\nusing tools such as\nactivation patching and\nsparse autoencoders.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The mitochondria convert chemical energy\nfrom food into adenosine triphosphate\nthrough oxidative phosphorylation\noccurring in the inner mitochondrial\nmembrane via electron transport chain\ncomplexes and the ATP synthase rotary\nmechanism.",
+          "pred": "The mitochondria convert\nchemical energy from food\ninto adenosine\ntriphosphate through\noxidative\nphosphorylation occurring\nin the inner\nmitochondrial membrane\nvia electron transport\nchain complexes and the\nATP synthase rotary\nmechanism.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Language models trained on large corpora\ndevelop emergent capabilities not\nexplicitly optimized for during training\nsuch as arithmetic reasoning chain-of-\nthought problem solving and in-context\nlearning from a small number of\ndemonstrations provided in the prompt.",
+          "pred": "Language models trained on\nlarge corpora develop emergent\ncapabilities not explicitly\noptimized for during training\nsuch as arithmetic reasoning\nchain-of-thought problem\nsolving and in-context\nlearning from a small number\nof demonstrations provided in\nthe prompt.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 0.9444444444444444
+        }
+      ]
+    },
+    {
+      "width": 60,
+      "exact_match_rate": 0.0,
+      "mean_overflow_rate": 0.0,
+      "mean_word_preservation": 1.0,
+      "samples": [
+        {
+          "gold": "The quick brown fox jumps over the lazy dog. A stitch in\ntime saves nine. Early to bed and early to rise makes a man\nhealthy wealthy and wise. All that glitters is not gold.\nActions speak louder than words.",
+          "pred": "The quick brown fox jumps over\nthe lazy dog. A stitch in time\nsaves nine. Early to bed and\nearly to rise makes a man\nhealthy wealthy and wise. All\nthat glitters is not gold.\nActions speak louder than words.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "It was the best of times it was the worst of times it was\nthe age of wisdom it was the age of foolishness it was the\nepoch of belief it was the epoch of incredulity it was the\nseason of light it was the season of darkness.",
+          "pred": "It was the best of times\nit was the worst of times\nit was the age of wisdom\nit was the age of\nfoolishness it was the\nepoch of belief it was\nthe epoch of incredulity\nit was the season of\nlight it was the season\nof darkness.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "To be or not to be that is the question whether tis nobler\nin the mind to suffer the slings and arrows of outrageous\nfortune or to take arms against a sea of troubles and by\nopposing end them to die to sleep no more.",
+          "pred": "To be or not to be that is the\nquestion whether tis nobler in\nthe mind to suffer the slings\nand arrows of outrageous\nfortune or to take arms against\na sea of troubles and by\nopposing end them to die to\nsleep no more.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Ask not what your country can do for you ask what you can do\nfor your country. One small step for man one giant leap for\nmankind. We choose to go to the moon not because it is easy\nbut because it is hard.",
+          "pred": "Ask not what your country can\ndo for you ask what you can do\nfor your country. One small step\nfor man one giant leap for\nmankind. We choose to go to\nthe moon not because it is easy\nbut because it is hard.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The only thing we have to fear is fear itself. Four score\nand seven years ago our fathers brought forth on this\ncontinent a new nation conceived in liberty and dedicated to\nthe proposition that all men are created equal and endowed\nwith inalienable rights.",
+          "pred": "The only thing we have to fear\nis fear itself. Four score and\nseven years ago our fathers\nbrought forth on this continent\na new nation conceived in\nliberty and dedicated to the\nproposition that all men are\ncreated equal and endowed with\ninalienable rights.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Photons are the quanta of electromagnetic radiation carrying\nenergy inversely proportional to wavelength. The gradient\ndescent algorithm iteratively moves parameters in the\ndirection of steepest loss reduction scaled by a learning\nrate.",
+          "pred": "Photons are the quanta of\nelectromagnetic radiation\ncarrying energy inversely\nproportional to wavelength.\nThe gradient descent\nalgorithm iteratively moves\nparameters in the direction\nof steepest loss reduction\nscaled by a learning rate.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Neural networks learn hierarchical representations through\nsuccessive transformations of the input data using learnable\nweight matrices and nonlinear activation functions such as\nthe rectified linear unit or sigmoid.",
+          "pred": "Neural networks learn\nhierarchical\nrepresentations through\nsuccessive\ntransformations of the\ninput data using\nlearnable weight\nmatrices and nonlinear\nactivation functions\nsuch as the rectified\nlinear unit or sigmoid.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Scientists discovered a new species of deep-sea fish\nexhibiting bioluminescence adapted for communication in the\naphotic zone where no sunlight penetrates. The organism\nproduces light through a luciferin-luciferase reaction\ncatalyzed by specific enzymes.",
+          "pred": "Scientists discovered a new\nspecies of deep-sea fish\nexhibiting bioluminescence\nadapted for communication\nin the aphotic zone where\nno sunlight penetrates. The\norganism produces light\nthrough a luciferin-luciferase\nreaction catalyzed by\nspecific enzymes.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The transformer architecture uses self-attention mechanisms\nto weigh the importance of different positions in the input\nsequence when computing representations allowing parallel\ncomputation and capturing long-range dependencies that\nrecurrent models often struggle with.",
+          "pred": "The transformer architecture uses\nself-attention mechanisms to weigh\nthe importance of different\npositions in the input sequence\nwhen computing representations\nallowing parallel computation and\ncapturing long-range dependencies\nthat recurrent models often\nstruggle with.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Mechanistic interpretability aims to reverse-engineer the\ncomputations performed by neural networks by identifying\ncircuits and representations that implement specific\nbehaviors or capabilities within the model weights using\ntools such as activation patching and sparse autoencoders.",
+          "pred": "Mechanistic interpretability aims to\nreverse-engineer the computations\nperformed by neural networks by\nidentifying circuits and\nrepresentations that implement\nspecific behaviors or capabilities\nwithin the model weights using tools\nsuch as activation patching and\nsparse autoencoders.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The mitochondria convert chemical energy from food into\nadenosine triphosphate through oxidative phosphorylation\noccurring in the inner mitochondrial membrane via electron\ntransport chain complexes and the ATP synthase rotary\nmechanism.",
+          "pred": "The mitochondria convert chemical\nenergy from food into adenosine\ntriphosphate through oxidative\nphosphorylation occurring in the\ninner mitochondrial membrane via\nelectron transport chain complexes\nand the ATP synthase rotary\nmechanism.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Language models trained on large corpora develop emergent\ncapabilities not explicitly optimized for during training\nsuch as arithmetic reasoning chain-of-thought problem\nsolving and in-context learning from a small number of\ndemonstrations provided in the prompt.",
+          "pred": "Language models trained on large\ncorpora develop emergent capabilities\nnot explicitly optimized for during\ntraining such as arithmetic reasoning\nchain-of-thought problem solving and\nin-context learning from a small\nnumber of demonstrations provided in\nthe prompt.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        }
+      ]
+    },
+    {
+      "width": 80,
+      "exact_match_rate": 0.08333333333333333,
+      "mean_overflow_rate": 0.0,
+      "mean_word_preservation": 0.9907407407407408,
+      "samples": [
+        {
+          "gold": "The quick brown fox jumps over the lazy dog. A stitch in time saves nine. Early\nto bed and early to rise makes a man healthy wealthy and wise. All that glitters\nis not gold. Actions speak louder than words.",
+          "pred": "The quick brown fox jumps over the lazy dog. A stitch in time saves\nnine. Early to bed and early to rise makes a man healthy wealthy\nand wise. All that glitters is not gold. Actions speak louder than\nwords.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "It was the best of times it was the worst of times it was the age of wisdom it\nwas the age of foolishness it was the epoch of belief it was the epoch of\nincredulity it was the season of light it was the season of darkness.",
+          "pred": "It was the best of times it was the worst of times it was the age of\nwisdom it was the age of foolishness it was the epoch of belief it was\nthe epoch of incredulity it was the season of light it was the season\nof darkness.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "To be or not to be that is the question whether tis nobler in the mind to suffer\nthe slings and arrows of outrageous fortune or to take arms against a sea of\ntroubles and by opposing end them to die to sleep no more.",
+          "pred": "To be or not to be that is the question whether tis nobler in the\nmind to suffer the slings and arrows of outrageous fortune or to\ntake arms against a sea of troubles and by opposing end them to\ndie to sleep no more.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Ask not what your country can do for you ask what you can do for your country.\nOne small step for man one giant leap for mankind. We choose to go to the moon\nnot because it is easy but because it is hard.",
+          "pred": "Ask not what your country can do for you ask what you can do for\nyour country. One small step for man one giant leap for mankind.\nWe choose to go to the moon not because it is easy but because\nit is hard.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The only thing we have to fear is fear itself. Four score and seven years ago\nour fathers brought forth on this continent a new nation conceived in liberty\nand dedicated to the proposition that all men are created equal and endowed with\ninalienable rights.",
+          "pred": "The only thing we have to fear is fear itself. Four score and\nseven years ago our fathers brought forth on this continent a\nnew nation conceived in liberty and dedicated to the\nproposition that all men are created equal and endowed with\ninalienable rights.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Photons are the quanta of electromagnetic radiation carrying energy inversely\nproportional to wavelength. The gradient descent algorithm iteratively moves\nparameters in the direction of steepest loss reduction scaled by a learning\nrate.",
+          "pred": "Photons are the quanta of electromagnetic radiation carrying energy inversely\nproportional to wavelength. The gradient descent algorithm iteratively\nmoves parameters in the direction of steepest loss reduction scaled by a\nlearning rate.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Neural networks learn hierarchical representations through successive\ntransformations of the input data using learnable weight matrices and nonlinear\nactivation functions such as the rectified linear unit or sigmoid.",
+          "pred": "Neural networks learn hierarchical representations through successive\ntransformations of the input data using learnable weight matrices and\nnonlinear activation functions such as the rectified linear unit or\nsigmoid.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Scientists discovered a new species of deep-sea fish exhibiting bioluminescence\nadapted for communication in the aphotic zone where no sunlight penetrates. The\norganism produces light through a luciferin-luciferase reaction catalyzed by\nspecific enzymes.",
+          "pred": "Scientists discovered a new species of deep-sea fish exhibiting\nbioluminescence adapted for communication in the aphotic zone where\nno sunlight penetrates. The organism produces light through a\nluciferin-luciferase reaction catalyzed by specific enzymes.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The transformer architecture uses self-attention mechanisms to weigh the\nimportance of different positions in the input sequence when computing\nrepresentations allowing parallel computation and capturing long-range\ndependencies that recurrent models often struggle with.",
+          "pred": "The transformer architecture uses self-attention mechanisms to weigh the\nimportance of different positions in the input sequence when computing\nrepresentations allowing parallel computation and capturing long-range\ndependencies that recurrent models often struggle with.",
+          "exact_match": true,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Mechanistic interpretability aims to reverse-engineer the computations performed\nby neural networks by identifying circuits and representations that implement\nspecific behaviors or capabilities within the model weights using tools such as\nactivation patching and sparse autoencoders.",
+          "pred": "Mechanistic interpretability aims to reverse-engineer the computations\nperformed by neural networks by identifying circuits and\nrepresentations that implement specific behaviors or capabilities\nwithin the model weights using tools such as activation patching\nand sparse autoencoders.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "The mitochondria convert chemical energy from food into adenosine triphosphate\nthrough oxidative phosphorylation occurring in the inner mitochondrial membrane\nvia electron transport chain complexes and the ATP synthase rotary mechanism.",
+          "pred": "The mitochondria convert chemical energy from food into adenosine\ntriphosphate through oxidative phosphorylation occurring in the inner\nmitochondrial membrane via electron transport chain complexes and the\nATP synthase rotary mechanism.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 1.0
+        },
+        {
+          "gold": "Language models trained on large corpora develop emergent capabilities not\nexplicitly optimized for during training such as arithmetic reasoning chain-of-\nthought problem solving and in-context learning from a small number of\ndemonstrations provided in the prompt.",
+          "pred": "Language models trained on large corpora develop emergent capabilities not\nexplicitly optimized for during training such as arithmetic reasoning,\nchain-of-thought problem solving, and in-context learning from a small\nnumber of demonstrations provided in the prompt.",
+          "exact_match": false,
+          "overflow_rate": 0.0,
+          "word_preservation": 0.8888888888888888
+        }
+      ]
+    }
+  ],
+  "logit": [
+    {
+      "width": 40,
+      "newline_token_id": 107,
+      "break_accuracy": 1.0,
+      "no_break_accuracy": 0.3225806451612903,
+      "mean_break_margin": 15.992068142361111,
+      "mean_no_break_margin": -2.3552984422253025,
+      "n_break_points": 45,
+      "n_no_break_points": 31,
+      "char_pos_bins": {
+        "centers": [
+          2.0,
+          6.0,
+          10.0,
+          14.0,
+          18.0,
+          22.0,
+          26.0,
+          30.0,
+          34.0,
+          38.0
+        ],
+        "mean_nl_margin": [
+          NaN,
+          NaN,
+          2.3092447916666665,
+          -1.4891853332519531,
+          5.002232142857143,
+          1.2190755208333333,
+          4.2529296875,
+          14.989453125,
+          17.538739885602677,
+          15.285723517922793
+        ],
+        "counts": [
+          0,
+          0,
+          6,
+          8,
+          7,
+          6,
+          2,
+          5,
+          14,
+          17
+        ]
+      }
+    },
+    {
+      "width": 60,
+      "newline_token_id": 107,
+      "break_accuracy": 1.0,
+      "no_break_accuracy": 0.4722222222222222,
+      "mean_break_margin": 15.027305201480264,
+      "mean_no_break_margin": -1.023262447781033,
+      "n_break_points": 19,
+      "n_no_break_points": 36,
+      "char_pos_bins": {
+        "centers": [
+          3.0,
+          9.0,
+          15.0,
+          21.0,
+          27.0,
+          33.0,
+          39.0,
+          45.0,
+          51.0,
+          57.0
+        ],
+        "mean_nl_margin": [
+          NaN,
+          -2.75701904296875,
+          -2.9662742614746094,
+          -0.644561767578125,
+          3.8408203125,
+          2.5499610900878906,
+          3.545501708984375,
+          -2.376953125,
+          14.6002197265625,
+          15.4732666015625
+        ],
+        "counts": [
+          0,
+          2,
+          4,
+          8,
+          4,
+          8,
+          8,
+          2,
+          4,
+          14
+        ]
+      }
+    },
+    {
+      "width": 80,
+      "newline_token_id": 107,
+      "break_accuracy": 1.0,
+      "no_break_accuracy": 0.4074074074074074,
+      "mean_break_margin": 13.735677083333334,
+      "mean_no_break_margin": -2.481087578667535,
+      "n_break_points": 6,
+      "n_no_break_points": 27,
+      "char_pos_bins": {
+        "centers": [
+          4.0,
+          12.0,
+          20.0,
+          28.0,
+          36.0,
+          44.0,
+          52.0,
+          60.0,
+          68.0,
+          76.0
+        ],
+        "mean_nl_margin": [
+          NaN,
+          -6.056098937988281,
+          1.6510416666666667,
+          3.671875,
+          4.700764973958333,
+          0.388671875,
+          0.1646728515625,
+          6.415364583333333,
+          11.363932291666666,
+          14.873046875
+        ],
+        "counts": [
+          0,
+          2,
+          3,
+          4,
+          6,
+          4,
+          4,
+          3,
+          3,
+          3
+        ]
+      }
+    }
+  ]
+}

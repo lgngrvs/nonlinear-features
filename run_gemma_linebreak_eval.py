@@ -163,6 +163,7 @@ def collect_decision_points(
     newline_id: int,
     min_context: int = 10,
     no_break_stride: int = 4,
+    min_lines: int = 2,
 ) -> list[dict]:
     """
     Tokenize `wrapped` and return decision-point dicts.
@@ -171,25 +172,48 @@ def collect_decision_points(
     No-break points — mid-line positions sampled every `no_break_stride`
                       tokens, skipping the ±2 neighbourhood of any newline.
 
+    min_lines: skip decision points until at least this many newlines have
+               appeared in the prefix. The Haiku paper reports accuracy "by
+               the third line", implying the model needs ~2 lines of context
+               to lock onto the width; setting min_lines=2 matches that.
+
     Each dict:
       input_ids — token ids preceding the decision token
       target_id — true next token (newline or continuation word)
       alt_id    — competing token (continuation word or newline)
       is_break  — True iff target is the newline token
+      char_pos  — character position within the current line at token i
     """
-    ids = tokenizer.encode(wrapped, add_special_tokens=False)
+    enc = tokenizer(wrapped, return_offsets_mapping=True, add_special_tokens=False)
+    ids = list(enc["input_ids"])
+    offsets = list(enc["offset_mapping"])
+
     newline_pos = {i for i, t in enumerate(ids) if t == newline_id}
+    # cumulative newline count: prefix_nl[i] = # newlines in ids[0..i] inclusive
+    prefix_nl = np.cumsum([1 if t == newline_id else 0 for t in ids])
+
     points = []
     no_break_counter = 0
 
     for i in range(min_context, len(ids) - 1):
+        # Require enough lines of context to match paper setup
+        nl_so_far = int(prefix_nl[i - 1]) if i > 0 else 0
+        if nl_so_far < min_lines:
+            continue
+
+        # Character position within the current line
+        text_pos = offsets[i][0]
+        last_nl_char = wrapped.rfind("\n", 0, text_pos)
+        char_pos = text_pos - last_nl_char - 1 if last_nl_char >= 0 else text_pos
+
         tid = ids[i]
         if tid == newline_id:
             next_tid = ids[i + 1]
             if next_tid == newline_id:
                 continue  # skip consecutive newlines
             points.append(dict(
-                input_ids=ids[:i], target_id=tid, alt_id=next_tid, is_break=True,
+                input_ids=ids[:i], target_id=tid, alt_id=next_tid,
+                is_break=True, char_pos=char_pos,
             ))
         else:
             near = any((i + k) in newline_pos for k in range(-2, 3))
@@ -198,7 +222,8 @@ def collect_decision_points(
             no_break_counter += 1
             if no_break_counter % no_break_stride == 0:
                 points.append(dict(
-                    input_ids=ids[:i], target_id=tid, alt_id=newline_id, is_break=False,
+                    input_ids=ids[:i], target_id=tid, alt_id=newline_id,
+                    is_break=False, char_pos=char_pos,
                 ))
 
     return points
@@ -214,10 +239,12 @@ def load_model_and_tokenizer(model_name: str, device: str):
     dtype = torch.bfloat16 if device not in ("cpu", "mps") else torch.float32
     print(f"Loading {model_name} ({dtype}, device={device})...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    n_gpus = torch.cuda.device_count() if device == "cuda" else 0
+    device_map = "auto" if n_gpus > 1 else (device if device not in ("cpu", "mps") else None)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=dtype,
-        device_map=device if device not in ("cpu", "mps") else None,
+        device_map=device_map,
     )
     if device in ("cpu", "mps"):
         model = model.to(device)
@@ -232,7 +259,8 @@ def load_model_and_tokenizer(model_name: str, device: str):
 # ---------------------------------------------------------------------------
 
 _GEN_INSTRUCTION = (
-    "Reformat the following text so that no line exceeds {width} characters. "
+    "Reformat the following text so that each line is as close as possible to "
+    "{width} characters without exceeding it. "
     "Break only at word boundaries. Preserve all words in their original order. "
     "Output only the reformatted text, nothing else.\n\n{text}"
 )
@@ -330,10 +358,15 @@ def run_logit_eval(
         return []
     print(f"Newline token: id={newline_id}  repr={repr(tokenizer.decode([newline_id]))}")
 
+    N_BINS = 10  # decile bins of char_pos / width
+
     results = []
     for width in widths:
         b_ok, b_mg = [], []
         nb_ok, nb_mg = [], []
+        # nl_margin = log_p(newline) - log_p(next_word) for every point
+        char_pos_all: list[int] = []
+        nl_margin_all: list[float] = []
 
         for text in tqdm(texts, desc=f"logit width={width}"):
             wrapped = wrap_oracle(text, width)
@@ -348,6 +381,9 @@ def run_logit_eval(
                 )
                 b_ok.append(lt > la)
                 b_mg.append(lt - la)
+                # lt=log_p(newline), la=log_p(word)
+                char_pos_all.append(p["char_pos"])
+                nl_margin_all.append(lt - la)
 
             for p in nbpts:
                 lt, la = _logit_pair(
@@ -355,6 +391,9 @@ def run_logit_eval(
                 )
                 nb_ok.append(lt > la)
                 nb_mg.append(lt - la)
+                # lt=log_p(word), la=log_p(newline) → newline margin = la - lt
+                char_pos_all.append(p["char_pos"])
+                nl_margin_all.append(la - lt)
 
         ba = float(np.mean(b_ok)) if b_ok else float("nan")
         nba = float(np.mean(nb_ok)) if nb_ok else float("nan")
@@ -366,6 +405,23 @@ def run_logit_eval(
             f"no_break_acc={nba:.3f} (n={len(nb_ok)})  "
             f"break_margin={bm:.3f}"
         )
+
+        # Character-position analysis: does newline preference grow toward line end?
+        char_arr = np.array(char_pos_all, dtype=float)
+        nl_arr = np.array(nl_margin_all, dtype=float)
+        bin_edges = np.linspace(0, width, N_BINS + 1)
+        bin_means, bin_counts = [], []
+        for lo, hi in zip(bin_edges[:-1], bin_edges[1:]):
+            mask = (char_arr >= lo) & (char_arr < hi)
+            bin_means.append(float(np.mean(nl_arr[mask])) if mask.any() else float("nan"))
+            bin_counts.append(int(mask.sum()))
+        bin_centers = [(lo + hi) / 2 for lo, hi in zip(bin_edges[:-1], bin_edges[1:])]
+        print(f"  char-pos analysis (log_p(newline)-log_p(word) by position, width={width}):")
+        print(f"  {'pos':>6}  {'nl_margin':>10}  {'n':>5}")
+        for ctr, mean, cnt in zip(bin_centers, bin_means, bin_counts):
+            bar = "█" * max(0, int((mean + 5) * 2)) if not np.isnan(mean) else ""
+            print(f"  {ctr:6.1f}  {mean:+10.3f}  {cnt:5d}  {bar}")
+
         results.append(dict(
             width=width,
             newline_token_id=newline_id,
@@ -375,6 +431,11 @@ def run_logit_eval(
             mean_no_break_margin=nbm,
             n_break_points=len(b_ok),
             n_no_break_points=len(nb_ok),
+            char_pos_bins=dict(
+                centers=bin_centers,
+                mean_nl_margin=bin_means,
+                counts=bin_counts,
+            ),
         ))
     return results
 
