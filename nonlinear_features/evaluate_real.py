@@ -297,6 +297,114 @@ def _compute_rf_spread_real(
 
 
 # ---------------------------------------------------------------------------
+# Multi-n restricted R²
+# ---------------------------------------------------------------------------
+
+def compute_restricted_r2_multi_n(
+    sae,
+    manifold_activations: dict[str, torch.Tensor],
+    manifold_labels: dict[str, np.ndarray],
+    n_select_values: list[int],
+    device: str = "cpu",
+) -> dict[str, dict[int, dict[int, float]]]:
+    """Compute restricted R²(k) curves for multiple top-n atom pool sizes.
+
+    Returns: {manifold_name: {n_select: {k: r2}}}
+    """
+    sae = sae.to(device).eval()
+    results: dict[str, dict[int, dict[int, float]]] = {}
+
+    for name, acts in manifold_activations.items():
+        acts = acts.to(device)
+        n = acts.shape[0]
+        acts_centered = acts - acts.mean(dim=0)
+
+        with torch.no_grad():
+            codes = sae.encode(acts)
+
+        labels_t = None
+        if name in manifold_labels:
+            raw = manifold_labels[name]
+            labels_t = torch.tensor(raw, dtype=torch.float32).to(device)
+
+        if labels_t is None:
+            continue
+
+        concept_dir = compute_concept_direction(acts_centered, labels_t)
+        acts_concept = acts_centered @ concept_dir
+        total_var = acts_concept.pow(2).sum().item()
+        acts_concept_cpu = acts_concept.cpu()
+
+        results[name] = {}
+        for n_sel in n_select_values:
+            selected = select_atoms_by_label_correlation(codes, labels_t, n_sel)
+            if not selected:
+                continue
+            r2_curve: dict[int, float] = {}
+            for k in range(1, len(selected) + 1):
+                atoms = selected[:k]
+                codes_sel = codes[:, atoms].cpu()
+                X = torch.cat([codes_sel, torch.ones(n, 1)], dim=-1)
+                W = torch.linalg.lstsq(X, acts_concept_cpu, driver="gelsd").solution
+                residual = (acts_concept_cpu - X @ W).pow(2).sum().item()
+                r2_curve[k] = 1 - residual / max(total_var, 1e-10)
+            results[name][n_sel] = r2_curve
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Figure 4B: support size vs receptive field path as K varies
+# ---------------------------------------------------------------------------
+
+def compute_figure4b_path(
+    sae,
+    manifold_activations: dict[str, torch.Tensor],
+    k_values: list[int],
+    device: str = "cpu",
+) -> dict[str, list[tuple[int, float]]]:
+    """Compute (support_size, rf_spread) path as post-hoc sparsity K varies.
+
+    For each K, codes are thresholded to top-K activations per sample, then
+    support_size and rf_spread are computed on the thresholded codes.
+
+    Returns: {manifold_name: [(support_size_k, rf_spread_k) for k in k_values]}
+    """
+    sae = sae.to(device).eval()
+    paths: dict[str, list[tuple[int, float]]] = {}
+
+    for name, acts in manifold_activations.items():
+        acts = acts.to(device)
+        n = acts.shape[0]
+        acts_centered = acts - acts.mean(dim=0)
+
+        with torch.no_grad():
+            codes_full = sae.encode(acts)  # (n, d_sae)
+
+        path = []
+        for K in k_values:
+            # Keep only top-K activations per sample
+            topk_vals, topk_idx = codes_full.topk(min(K, codes_full.shape[1]), dim=1)
+            codes_k = torch.zeros_like(codes_full)
+            codes_k.scatter_(1, topk_idx, topk_vals)
+
+            # Support size: atoms firing on ≥5% of samples
+            firing_counts = (codes_k.abs() > 0).float().sum(dim=0)
+            threshold_count = max(0.05 * n, 5)
+            support_size = int((firing_counts >= threshold_count).sum().item())
+
+            # RF spread
+            rf_spread = _compute_rf_spread_real(
+                codes_k, acts_centered, firing_counts, threshold_count
+            )
+            path.append((support_size, rf_spread))
+
+        paths[name] = path
+
+    return paths
+
+
+# ---------------------------------------------------------------------------
 # Ising coupling
 # ---------------------------------------------------------------------------
 
@@ -306,11 +414,15 @@ def compute_ising_coupling_real(
     device: str = "cpu",
     regularization: float = 0.01,
     n_steps: int = 2000,
+    concept_atom_indices: list[int] | None = None,
 ) -> tuple[torch.Tensor, list[int]]:
     """Compute Ising coupling matrix from SAE codes on real manifold activations.
 
-    Shuffles the concatenated activations so all manifolds contribute equally,
-    then uses all samples (not just the first 10k).
+    Shuffles the concatenated activations so all manifolds contribute equally.
+    If concept_atom_indices is provided, restricts the Ising to only those atoms
+    (typically the union of greedy-selected atoms per manifold), giving a clean
+    ~75-atom matrix matching the paper rather than all 200+ active atoms.
+
     Returns (J_full, active_indices) so callers can visualize the active submatrix.
     """
     sae = sae.to(device).eval()
@@ -321,10 +433,24 @@ def compute_ising_coupling_real(
     with torch.no_grad():
         codes = sae.encode(all_acts)
 
+    # Restrict to concept-relevant atoms before Ising fitting
+    if concept_atom_indices is not None:
+        atom_idx_t = torch.tensor(concept_atom_indices, dtype=torch.long, device=device)
+        codes_restricted = codes[:, atom_idx_t]
+    else:
+        codes_restricted = codes
+
     from .evaluate import compute_ising_coupling
-    J_active, active_idx_tensor = compute_ising_coupling(
-        codes, lam=regularization, device=device,
-        n_steps=n_steps, n_samples=len(codes),
+    J_active, local_idx_tensor = compute_ising_coupling(
+        codes_restricted, lam=regularization, device=device,
+        n_steps=n_steps, n_samples=len(codes_restricted),
     )
-    active_idx = active_idx_tensor.tolist()
+    local_idx = local_idx_tensor.tolist()
+
+    # Map local indices back to global SAE atom indices
+    if concept_atom_indices is not None:
+        active_idx = [concept_atom_indices[i] for i in local_idx]
+    else:
+        active_idx = local_idx
+
     return J_active, active_idx

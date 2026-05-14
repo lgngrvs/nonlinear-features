@@ -66,6 +66,7 @@ def compute_restricted_r2(
     contributions: torch.Tensor,  # (n_eval, m, d)
     instances: list[ManifoldInstance],
     n_atoms_range: tuple[int, int] = (-2, 3),  # relative to k_i
+    abs_max_atoms: int | None = None,           # if set, evaluate for 1..abs_max_atoms
     device: str = "cpu",
 ) -> list[ManifoldEvalResult]:
     """Compute restricted R² for all manifold instances.
@@ -101,8 +102,12 @@ def compute_restricted_r2(
         true_i = contributions[mask, i]  # (n_i, d)
 
         k_i = inst.embedding_dim
-        max_atoms = k_i + n_atoms_range[1]
-        min_atoms = max(1, k_i + n_atoms_range[0])
+        if abs_max_atoms is not None:
+            min_atoms = 1
+            max_atoms = abs_max_atoms
+        else:
+            max_atoms = k_i + n_atoms_range[1]
+            min_atoms = max(1, k_i + n_atoms_range[0])
 
         # Greedy atom selection (based on decoder directions explaining true variance)
         selected = greedy_atom_selection(decoder_weights, true_i, max_atoms)

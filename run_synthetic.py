@@ -9,6 +9,7 @@ import json
 import os
 import time
 
+import numpy as np
 import torch
 
 from nonlinear_features.manifolds import build_manifold_instances
@@ -32,7 +33,12 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-3)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--loss-fn", type=str, default="l1", choices=["l1", "mse"])
+    parser.add_argument("--loss-fn", type=str, default="mse", choices=["l1", "mse"])
+    parser.add_argument("--abs-max-atoms", type=int, default=50,
+                        help="Evaluate restricted R² for 1..abs_max_atoms atoms")
+    parser.add_argument("--ising-k", type=int, default=25,
+                        help="Compute Ising coupling for this K value (0 to skip)")
+    parser.add_argument("--ising-steps", type=int, default=2000)
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--save-dir", type=str, default="checkpoints")
     parser.add_argument("--seed", type=int, default=42)
@@ -100,7 +106,7 @@ def main():
         print(f"\n--- Evaluating k={k} ---")
         eval_results = compute_restricted_r2(
             model, eval_data, eval_masks, eval_contribs,
-            instances, device=device,
+            instances, abs_max_atoms=args.abs_max_atoms, device=device,
         )
         agg = aggregate_results(eval_results)
 
@@ -143,6 +149,63 @@ def main():
             supp = all_results[k]["eval_agg"]["avg_support_size"]
             rf = all_results[k]["eval_agg"]["avg_receptive_field_spread"]
             print(f"  k={k:3d}  R²={r2:.4f}  support={supp:6.1f}  RF_spread={rf:.4f}")
+
+    # 7. Ising coupling for the requested K value
+    if args.ising_k > 0 and args.ising_k in all_results:
+        print(f"\n{'='*60}")
+        print(f"Computing Ising coupling for k={args.ising_k}")
+        print(f"{'='*60}")
+        # Reload the checkpoint for this K
+        ckpt_path = f"{args.save_dir}/sae_k{args.ising_k}.pt"
+        if os.path.exists(ckpt_path):
+            from nonlinear_features.sae import TopKSAE
+            ising_model = TopKSAE(args.d, args.c, args.ising_k).to(device)
+            ising_model.load_state_dict(torch.load(ckpt_path, map_location=device))
+            ising_model.eval()
+        else:
+            print(f"  No checkpoint at {ckpt_path}, reusing last-trained model")
+            ising_model = model
+
+        with torch.no_grad():
+            eval_codes = ising_model.encode(eval_data.to(device))
+
+        J_active, active_idx = compute_ising_coupling(
+            eval_codes, lam=0.01, device=device,
+            n_steps=args.ising_steps, n_samples=len(eval_codes),
+        )
+        n_active = len(active_idx)
+        print(f"  Active atoms: {n_active}, |J|_max={J_active.abs().max():.4f}")
+
+        # Plot Ising matrix
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(figsize=(7, 6))
+        fig.patch.set_facecolor("#111")
+        ax.set_facecolor("#1a1a1a")
+        J_np = J_active.cpu().numpy()
+        nonzero = J_np[J_np != 0]
+        vmax = float(np.percentile(np.abs(nonzero), 99)) if len(nonzero) > 0 else 1.0
+        im = ax.imshow(J_np, cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.set_title(f"Ising coupling — {n_active} active atoms  (k={args.ising_k})",
+                     color="#ddd")
+        ax.set_xlabel("Atom index", color="#aaa")
+        ax.set_ylabel("Atom index", color="#aaa")
+        ax.tick_params(colors="#aaa")
+        plt.colorbar(im, ax=ax, shrink=0.85)
+        plt.tight_layout()
+        ising_path = f"{args.save_dir}/ising_coupling_k{args.ising_k}.png"
+        plt.savefig(ising_path, dpi=150, bbox_inches="tight",
+                    facecolor=fig.get_facecolor())
+        plt.close()
+        print(f"  Saved {ising_path}")
+
+        all_results[f"ising_k{args.ising_k}"] = {
+            "n_active": n_active,
+            "j_max": float(J_active.abs().max()),
+        }
+    else:
+        print(f"\n  Skipping Ising (ising_k={args.ising_k} not in k_values or disabled)")
 
     # Save results
     # Convert for JSON serialization

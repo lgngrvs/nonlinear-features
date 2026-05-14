@@ -25,11 +25,14 @@ from nonlinear_features.jumprelu_sae import JumpReLUSAE
 from nonlinear_features.evaluate_real import (
     compute_restricted_r2_real,
     compute_ising_coupling_real,
+    compute_restricted_r2_multi_n,
+    compute_figure4b_path,
     _expand_labels,
     select_atoms_by_label_correlation,
 )
 
 CONCEPT_ORDER = ["years", "temperature", "days", "colors"]
+CANONICAL_MANIFOLDS = {"colors", "days", "temperature", "years"}
 CONCEPT_COLORS = {
     "years":       "#4CAF50",
     "temperature": "#F44336",
@@ -39,13 +42,20 @@ CONCEPT_COLORS = {
 }
 
 
-def load_activations(activations_dir: str):
-    """Load saved activation tensors and labels from run_gemma_pca.py."""
+def load_activations(activations_dir: str, manifolds: set[str] | None = None):
+    """Load saved activation tensors and labels from run_gemma_pca.py.
+
+    Only loads the canonical manifold files by default (colors, days, temperature,
+    years) to avoid accidentally pulling in encoding-variant files.
+    """
+    manifold_filter = manifolds if manifolds is not None else CANONICAL_MANIFOLDS
     manifold_acts = {}
     manifold_labels = {}
     act_dir = Path(activations_dir)
     for path in sorted(act_dir.glob("activations_*.pt")):
         name = path.stem.replace("activations_", "")
+        if name not in manifold_filter:
+            continue
         data = torch.load(path, map_location="cpu", weights_only=False)
         if isinstance(data, dict):
             manifold_acts[name] = data["activations"]
@@ -215,6 +225,79 @@ def plot_ising_matrix(
     print(f"Saved {path}")
 
 
+def plot_restricted_r2_multi_n(
+    multi_n_results: dict[str, dict[int, dict[int, float]]],
+    n_select_values: list[int],
+    save_dir: str,
+    tag: str = "gemma",
+):
+    """Plot k vs restricted R² curves for multiple top-n atom pool sizes (Fig 4A style)."""
+    manifolds = [m for m in CONCEPT_ORDER if m in multi_n_results]
+    fig, axes = plt.subplots(1, len(manifolds), figsize=(4 * len(manifolds), 4), squeeze=False)
+
+    cmap = plt.cm.plasma
+    colors_n = [cmap(i / max(len(n_select_values) - 1, 1)) for i in range(len(n_select_values))]
+
+    for ax, name in zip(axes[0], manifolds):
+        for color, n_sel in zip(colors_n, n_select_values):
+            if n_sel not in multi_n_results[name]:
+                continue
+            curve = multi_n_results[name][n_sel]
+            ks = sorted(curve.keys())
+            r2s = [curve[k] for k in ks]
+            ax.plot(ks, r2s, "o-", linewidth=1.5, markersize=3, color=color,
+                    label=f"n={n_sel}", alpha=0.85)
+        ax.axhline(y=0, color="gray", linewidth=0.8, linestyle=":")
+        ax.set_xlabel("# decoder atoms (k)")
+        ax.set_ylabel("Restricted R²")
+        ax.set_title(name)
+        ax.set_ylim(-0.1, 1.05)
+        ax.legend(fontsize=7, loc="lower right")
+        ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    path = Path(save_dir) / f"restricted_r2_multi_n_{tag}.png"
+    plt.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved {path}")
+
+
+def plot_figure4b(
+    paths: dict[str, list[tuple[int, float]]],
+    k_values: list[int],
+    save_dir: str,
+    tag: str = "gemma",
+):
+    """Figure 4B: support size vs RF spread path as K (post-hoc sparsity) varies."""
+    fig, ax = plt.subplots(figsize=(6, 5))
+
+    markers = ["o", "s", "^", "D"]
+    for (name, path_pts), marker in zip(paths.items(), markers):
+        color = CONCEPT_COLORS.get(name, "#888")
+        xs = [p[0] for p in path_pts]
+        ys = [p[1] for p in path_pts]
+        ax.plot(xs, ys, "-", color=color, linewidth=1.5, alpha=0.7)
+        ax.scatter(xs, ys, c=[color] * len(xs), marker=marker, s=50, zorder=4,
+                   label=name)
+        # Annotate a few K values
+        for i, (x, y, k) in enumerate(zip(xs, ys, k_values)):
+            if i in {0, len(k_values) // 2, len(k_values) - 1}:
+                ax.annotate(f"K={k}", (x, y), textcoords="offset points",
+                            xytext=(4, 4), fontsize=6, color=color)
+
+    ax.set_xlabel("Support size (# active atoms on manifold)")
+    ax.set_ylabel("RF spread (median RF diam / manifold diam)")
+    ax.set_title(f"Support size vs RF spread  (varying K)\nSAE width={tag}")
+    ax.legend(fontsize=9)
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    path = Path(save_dir) / f"figure4b_{tag}.png"
+    plt.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved {path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Gemma manifold evaluation")
     parser.add_argument("--activations-dir", type=str, default="figures/gemma_pca")
@@ -227,6 +310,10 @@ def main():
                         choices=["small", "medium", "big"])
     parser.add_argument("--sae-local-path", type=str, default=None)
     parser.add_argument("--max-atoms", type=int, default=32)
+    parser.add_argument("--multi-n", type=str, default="16,32,64,128",
+                        help="Comma-separated n_select values for multi-n R² plot")
+    parser.add_argument("--k-values", type=str, default="5,10,15,20,30,45,60,80",
+                        help="Comma-separated K values for Figure 4B sweep")
     parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--save-dir", type=str, default="figures/gemma_eval")
     parser.add_argument("--tag", type=str, default=None,
@@ -246,6 +333,8 @@ def main():
 
     tag = args.tag or args.sae_width
     os.makedirs(args.save_dir, exist_ok=True)
+    multi_n_values = [int(x) for x in args.multi_n.split(",")]
+    k_values = [int(x) for x in args.k_values.split(",")]
 
     # 1. Load activations
     print("\n=== Loading activations ===")
@@ -293,13 +382,31 @@ def main():
               f"support={r.support_size:4d}  RF={r.receptive_field_spread:.3f}")
     plot_restricted_r2(results, args.save_dir, tag=tag)
 
-    # 4. Ising coupling (shuffled, all samples)
+    # 4. Multi-n restricted R² (Fig 4A style)
+    print(f"\n=== Multi-n restricted R² (n = {multi_n_values}) ===")
+    multi_n_results = compute_restricted_r2_multi_n(
+        sae, manifold_acts, manifold_labels, multi_n_values, device=device,
+    )
+    plot_restricted_r2_multi_n(multi_n_results, multi_n_values, args.save_dir, tag=tag)
+
+    # 5. Figure 4B: support size vs RF spread path
+    print(f"\n=== Figure 4B: K sweep {k_values} ===")
+    fig4b_paths = compute_figure4b_path(sae, manifold_acts, k_values, device=device)
+    plot_figure4b(fig4b_paths, k_values, args.save_dir, tag=tag)
+
+    # 6. Ising coupling — restricted to concept-atom union for cleaner ~75-atom matrix
     print("\n=== Computing Ising coupling ===")
-    J_active, active_indices = compute_ising_coupling_real(sae, manifold_acts, device=device)
+    # Collect union of greedy-selected atoms across all manifolds
+    concept_atoms = sorted(set().union(*[r.greedy_atom_indices for r in results]))
+    print(f"  Restricting Ising to {len(concept_atoms)} concept atoms "
+          f"(union of greedy selections, max_atoms={args.max_atoms})")
+    J_active, active_indices = compute_ising_coupling_real(
+        sae, manifold_acts, device=device, concept_atom_indices=concept_atoms,
+    )
     print(f"  J_active shape: {J_active.shape}, active atoms: {len(active_indices)}, "
           f"|J|_max={J_active.abs().max():.4f}")
 
-    # Assign atoms to concepts for sorted plot
+    # 7. Assign atoms to concepts for sorted Ising plot
     print("  Computing atom → concept assignments...")
     atom_assignments = compute_atom_concept_assignments(
         sae, manifold_acts, manifold_labels, active_indices, device=device
@@ -312,7 +419,7 @@ def main():
     plot_ising_matrix(J_active, active_indices, args.save_dir, tag=tag,
                       atom_assignments=atom_assignments)
 
-    # 5. Save summary
+    # 8. Save summary
     summary = {
         "model": args.sae_repo,
         "layer": args.sae_layer,
