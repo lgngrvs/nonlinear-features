@@ -205,10 +205,6 @@ def plot_ising_matrix(
                 ax.axvline(x=k - 0.5, color="white", linewidth=1.2, alpha=0.8)
                 prev = c
 
-        patches = [mpatches.Patch(color=CONCEPT_COLORS[c], label=c) for c in CONCEPT_ORDER
-                   if c in set(concept_labels)]
-        ax.legend(handles=patches, loc="lower right", fontsize=9,
-                  framealpha=0.8, facecolor="#222")
 
     jmax = float(np.abs(J_sorted).max())
     ax.set_title(f"Ising coupling — {p} active atoms (sorted by concept)\n"
