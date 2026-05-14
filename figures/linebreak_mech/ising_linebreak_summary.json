@@ -1,0 +1,33 @@
+{
+  "attn_L0": {
+    "n_samples": 825,
+    "n_active": 1541,
+    "concept_counts": {
+      "other": 1519,
+      "neg_ramp": 22
+    },
+    "J_max": 0.9400467872619629,
+    "J_mean_abs": 0.0018777005607262254
+  },
+  "attn_L1": {
+    "n_samples": 825,
+    "n_active": 1459,
+    "concept_counts": {
+      "neg_ramp": 9,
+      "other": 1450
+    },
+    "J_max": 0.9111698865890503,
+    "J_mean_abs": 0.0020946376025676727
+  },
+  "resid_L24": {
+    "n_samples": 825,
+    "n_active": 500,
+    "concept_counts": {
+      "other": 497,
+      "neg_ramp": 1,
+      "pos_ramp": 2
+    },
+    "J_max": 0.7351441383361816,
+    "J_mean_abs": 0.011945032514631748
+  }
+}
